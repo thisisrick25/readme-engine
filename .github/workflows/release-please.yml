@@ -57,7 +57,7 @@ jobs:
         id: release
         with:
           release-type: node
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.README_ENGINE }}
 
       - name: Checkout code
         uses: actions/checkout@v4
