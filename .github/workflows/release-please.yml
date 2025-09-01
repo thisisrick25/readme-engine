@@ -13,6 +13,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      app_token: ${{ steps.app-token.outputs.token }}
     steps:
       - uses: actions/create-github-app-token@v2
         id: app-token
@@ -57,7 +59,7 @@ jobs:
         id: release
         with:
           release-type: node
-          token: ${{ secrets.README_ENGINE }}
+          token: ${{ needs.build.outputs.app_token }}
 
       - name: Checkout code
         uses: actions/checkout@v4
