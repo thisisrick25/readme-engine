@@ -1,0 +1,17 @@
+name: Local Action Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run My Action
+        run: node dist/index.js
+        env:
+          INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_PLUGINS: prs
+          INPUT_MAX_PRS: 7
