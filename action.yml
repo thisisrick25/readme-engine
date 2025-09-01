@@ -1,0 +1,17 @@
+name: 'Display Latest PRs'
+description: 'A GitHub Action to display your latest merged PRs on your profile README.'
+author: 'thisisrick25'
+inputs:
+  GITHUB_TOKEN:
+    description: 'The GitHub token to use for authentication.'
+    required: true
+  PLUGINS:
+    description: 'A comma-separated list of plugins to run.'
+    required: true
+  MAX_PRS:
+    description: 'The maximum number of pull requests to display.'
+    required: false
+    default: 5
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
