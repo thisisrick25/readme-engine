@@ -9,7 +9,7 @@ async function test() {
 
   // For local testing, we still need a username to pass to the plugins
   const username = process.env.GITHUB_USERNAME; 
-  const plugins = ["prs"];
+  const plugins = ["prs",  "notable-contributions"];
   const maxPrs = 10; // Example value for testing
   const token = process.env.GITHUB_TOKEN;
 
