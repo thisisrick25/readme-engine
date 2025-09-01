@@ -65,15 +65,28 @@ jobs:
 
       - name: Tag major and minor versions
         run: |
+          if [ -z "${{ steps.release.outputs.tag_name }}" ]; then
+            echo "No release created, skipping tagging."
+            exit 0
+          fi
+
           git config user.name thisisrick25[bot]
           git config user.email 229200791+thisisrick25[bot]@users.noreply.github.com
           git remote add gh-token "https://${{ secrets.GITHUB_TOKEN}}@github.com/thisisrick25/readme-engine.git"
-          git tag -d v${{ steps.release.outputs.major }} || true
-          git tag -d v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
-          git push origin :v${{ steps.release.outputs.major }} || true
-          git push origin :v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
-          git tag -a v${{ steps.release.outputs.major }} -m "Release v${{ steps.release.outputs.major }}"
-          git tag -a v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} -m "Release v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}"
-          git push origin v${{ steps.release.outputs.major }}
-          git push origin v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}
+
+          VERSION=${{ steps.release.outputs.tag_name }}
+          MAJOR_VERSION=$(echo $VERSION | cut -d. -f1)                                                                                
+          MINOR_VERSION=$(echo $VERSION | cut -d. -f1-2)
+
+          # Delete existing major/minor tags if they exist (remote and local)
+          git tag -d ${MAJOR_VERSION} || true
+          git tag -d ${MINOR_VERSION} || true
+          git push origin :${MAJOR_VERSION} || true
+          git push origin :${MINOR_VERSION} || true
+
+          # Create and push new major/minor tags
+          git tag -a ${MAJOR_VERSION} -m "Release ${MAJOR_VERSION}"
+          git tag -a ${MINOR_VERSION} -m "Release ${MINOR_VERSION}"
+          git push origin ${MAJOR_VERSION}
+          git push origin ${MINOR_VERSION}
         if: ${{ steps.release.outputs.releases_created }}
