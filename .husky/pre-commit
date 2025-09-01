@@ -1,0 +1,6 @@
+# Prevent committing dist folder
+if git diff --cached --name-only | grep -q '^dist/'; then
+  echo "Error: Committing 'dist' folder is not allowed. It is managed by the release workflow."
+  echo "Please unstage 'dist' files before committing."
+  exit 1
+fi
