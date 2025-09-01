@@ -33,7 +33,13 @@ async function run() {
     }
 
     // Pass maxPrs to runCore
-    newReadmeContent = await runCore(octokit, github.context.repo.owner, plugins, readmeContent, maxPrs);
+    let username;
+    if (process.env.LOCAL_TEST_MODE === 'true') {
+      username = process.env.GITHUB_USERNAME;
+    } else {
+      username = github.context.repo.owner;
+    }
+    newReadmeContent = await runCore(octokit, username, plugins, readmeContent, maxPrs);
 
     // Conditional write based on mode
     if (process.env.LOCAL_TEST_MODE === 'true') {
@@ -63,3 +69,5 @@ async function run() {
 
 // Export the run function
 module.exports = run;
+
+run();
