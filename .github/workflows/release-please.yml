@@ -38,13 +38,13 @@ jobs:
           command: pr
           upstream_repo: readme-engine
           upstream_owner: thisisrick25
-          description: Build dist
-          title: "chore: build dist"
-          message: "chore: build dist"
-          labels: automated pr
-          branch: build-dist
+          description: Build action
+          title: "build(action): update compiled output"
+          message: "build(action): update compiled output"
+          labels: automated pr:action
+          branch: build-action
           force: true
-          git_dir: .
+          git_dir: './dist'
           fork: false
         env:
           ACCESS_TOKEN: ${{ steps.app-token.outputs.token }}
