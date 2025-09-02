@@ -7,7 +7,7 @@
 const core = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 const runCore = __nccwpck_require__(6758);
-const fs = (__nccwpck_require__(9896).promises);
+const fs = (__nccwpck_require__(9896).promises); // Add fs for local file operations
 
 async function run() {
   let newReadmeContent = '';
