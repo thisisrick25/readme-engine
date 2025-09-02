@@ -55,60 +55,9 @@ jobs:
 | [`notable-contributions`](src/plugins/notable-contributions) | Displays your most recent merged pull requests to repositories you do not own. |
 | [`prs`](src/plugins/prs)                                     | Fetches and displays your latest merged Pull Requests.                         |
 
-## 🛠️ Local Development
-
-To develop and test `readme-engine` locally, follow these steps:
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/thisisrick25/readme-engine.git
-   cd readme-engine
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables:**
-   Create a `.env` file in the root of your project with the following content:
-
-   ```bash
-   GITHUB_TOKEN=your_github_token
-   GITHUB_USERNAME=your_github_username
-   LOCAL_TEST_MODE=true
-   ```
-
-   Create a `.secrets` file in the root of your project with your GitHub Token:
-
-   ```bash
-   GITHUB_TOKEN=your_github_token
-   ```
-
-4. **Run local test script:**
-
-   ```bash
-   node local-test.js
-   ```
-
-   This will generate `local-output.md` with the updated content.
-
-5. **Test with `act` (simulated GitHub Actions environment):**
-
-   ```bash
-   act -b workflow_dispatch
-   ```
-
-   This will run the `test-action.yml` workflow and generate `local-output.md`.
-
-6. **Prevent accidental `dist` commits (Husky):**
-   The `dist` folder is managed by the release workflow. To prevent accidental commits of the `dist` folder from your local machine, a pre-commit hook is set up using Husky. If you try to commit `dist` files, the commit will be blocked.
-
 ## 🤝 Contributing
 
-Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) (coming soon) for more details.
+Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
 ## 📄 License
 

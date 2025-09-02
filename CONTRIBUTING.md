@@ -83,7 +83,7 @@ This method is ideal for quickly testing the core logic of the action without th
 
 ### 2. Integration Testing (`.github/workflows/test-action.yml` with `act`)
 
-First, ensure you have `act` installed. `act` is a tool that allows you to run GitHub Actions locally. Follow the official installation guide: [https://github.com/nektos/act#installation](https://github.com/nektos/act#installation)
+First, ensure you have `act` installed. `act` is a tool that allows you to run GitHub Actions locally. Follow the official installation guide: [https://github.com/nektos/act](https://github.com/nektos/act)
 
 This method simulates the GitHub Actions environment using `act` and runs the actual workflow defined in `test-action.yml`. This provides a more accurate representation of how your action will behave on GitHub.
 
