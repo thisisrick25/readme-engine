@@ -81,17 +81,17 @@ This method is ideal for quickly testing the core logic of the action without th
 
 - **Output:** This will generate `local-output.md` in your project root, containing the updated README content based on your local changes.
 
-### 2. Integration Testing (`.github/workflows/test-action.yml` with `act`)
+### 2. Integration Testing (`local-test-workflow.yml` with `act`)
 
 First, ensure you have `act` installed. `act` is a tool that allows you to run GitHub Actions locally. Follow the official installation guide: [https://github.com/nektos/act](https://github.com/nektos/act)
 
-This method simulates the GitHub Actions environment using `act` and runs the actual workflow defined in `test-action.yml`. This provides a more accurate representation of how your action will behave on GitHub.
+This method simulates the GitHub Actions environment using `act` and runs the actual workflow defined in `local-test-workflow.yml`. This provides a more accurate representation of how your action will behave on GitHub.
 
 - **Purpose:** Verify the action's behavior within a simulated GitHub Actions workflow, including input/output handling and environment variables.
 - **How to run:**
 
   ```bash
-  act -b workflow_dispatch -W .github/workflows/test-action.yml
+  act -b workflow_dispatch -W local-test-workflow.yml
   ```
 
 - **Output:** This will also generate `local-output.md` in your project root. Check the console output for any errors or warnings from the workflow run.
