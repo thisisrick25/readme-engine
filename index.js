@@ -10,7 +10,9 @@ async function run() {
   try {
     const githubToken = core.getInput('GITHUB_TOKEN');
     const plugins = core.getInput('PLUGINS').split(',').map(p => p.trim());
-    const maxPrs = parseInt(core.getInput('MAX_PRS'), 10);
+    const pluginConfigString = core.getInput('PLUGIN_CONFIG');
+    const pluginConfig = JSON.parse(pluginConfigString || '{}');
+    console.log(pluginConfig);
 
     const octokit = github.getOctokit(githubToken);
 
@@ -39,7 +41,7 @@ async function run() {
     } else {
       username = github.context.repo.owner;
     }
-    newReadmeContent = await runCore(octokit, username, plugins, readmeContent, maxPrs);
+    newReadmeContent = await runCore(octokit, username, plugins, readmeContent, pluginConfig);
 
     // Conditional write based on mode
     if (process.env.LOCAL_TEST_MODE === 'true') {

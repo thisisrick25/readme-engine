@@ -8,10 +8,10 @@ inputs:
   PLUGINS:
     description: 'A comma-separated list of plugins to run.'
     required: true
-  MAX_PRS:
-    description: 'The maximum number of pull requests to display.'
+  PLUGIN_CONFIG:
+    description: 'JSON string containing configuration for each plugin (e.g., {"prs": {"maxPrs": 5}, "notable-contributions": {"maxPrs": 10}}).
     required: false
-    default: 5
+    default: '{}'
 runs:
   using: 'node20'
   main: 'dist/index.js'

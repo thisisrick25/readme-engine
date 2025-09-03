@@ -13,5 +13,6 @@ jobs:
         run: node dist/index.js
         env:
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_PLUGINS: prs
-          INPUT_MAX_PRS: 7
+          INPUT_PLUGINS: prs, notable-contributions
+          INPUT_PLUGIN_CONFIG: | 
+            {"prs": {"maxPrs": 10}, "notable-contributions": {"maxPrs": 10}}
