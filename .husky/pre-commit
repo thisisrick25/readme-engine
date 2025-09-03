@@ -1,8 +1,4 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # Prevent committing dist folder
-
 # Check if this is a merge commit (git rev-parse --verify HEAD^2 >/dev/null 2>&1)
 # If it's a merge commit, allow it to pass (as dist changes might come from a pull/merge)
 if git rev-parse --verify HEAD^2 >/dev/null 2>&1; then
