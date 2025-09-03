@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.0](https://github.com/thisisrick25/readme-engine/compare/v1.0.0...v2.0.0) (2025-09-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* **config:** allow flexible plugin configuration via JSON input
+* **core:** enable per-plugin configuration and dynamic loading
+* **config:** replace MAX_PRS with PLUGIN_CONFIG for flexible settings
+
+### Features
+
+* **config:** allow flexible plugin configuration via JSON input ([3d25a80](https://github.com/thisisrick25/readme-engine/commit/3d25a806c49f124a29e9a1e28d335f70aa81d631))
+* **config:** replace MAX_PRS with PLUGIN_CONFIG for flexible settings ([3aa926e](https://github.com/thisisrick25/readme-engine/commit/3aa926e5b2721d4d4116a7bcb3f81c783581bd40))
+* **core:** enable per-plugin configuration and dynamic loading ([eaac002](https://github.com/thisisrick25/readme-engine/commit/eaac002cc611bbb3c44b1409ea6b0dde1fa23224))
+
 ## 1.0.0 (2025-09-02)
 
 
