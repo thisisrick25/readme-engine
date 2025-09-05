@@ -64,6 +64,8 @@ jobs:
         with:
           release-type: node
           token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
       - name: Checkout code
         uses: actions/checkout@v4
