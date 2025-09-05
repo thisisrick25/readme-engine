@@ -1,5 +1,8 @@
-module.exports = async function(octokit, username, prsConfig) {
-    const maxPrs = prsConfig && prsConfig.maxPrs ? parseInt(prsConfig.maxPrs, 10) : 5; // Default to 5 if not provided
+import type { Plugin } from '../../types.js';
+
+const prsPlugin: Plugin = async (octokit, username, config) => {
+    const maxPrs = parseInt(String(config.maxPrs ?? 5), 10); // Default to 5 if not provided
+    
     const { data: { items: pullRequests } } = await octokit.rest.search.issuesAndPullRequests({
         q: `is:pr is:merged author:${username}`,
         sort: 'updated',
@@ -15,3 +18,5 @@ module.exports = async function(octokit, username, prsConfig) {
 
     return prList;
 }
+
+export default prsPlugin;
