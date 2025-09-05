@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/thisisrick25/readme-engine/compare/v2.0.0...v2.1.0) (2025-09-05)
+
+
+### Features
+
+* **plugins:** define core types for plugin system ([e793ffa](https://github.com/thisisrick25/readme-engine/commit/e793ffa8ca03f02f55adcfae3b3b37b3b88ed7a1))
+
 ## [2.0.0](https://github.com/thisisrick25/readme-engine/compare/v1.0.0...v2.0.0) (2025-09-03)
 
 

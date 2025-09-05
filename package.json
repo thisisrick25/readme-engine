@@ -1,19 +1,16 @@
 {
   "name": "github-action",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "ncc build src/index.ts --license licenses.txt",
     "prebuild": "npm run generate-plugins",
-
     "test:local": "node --import tsx tests/local-test.ts",
     "pretest:local": "npm run generate-plugins",
-
     "test:integration": "act --job run-local-test --workflows tests/local-test-workflow.yml",
     "generate-plugins": "node scripts/generate-plugin-registry.js",
-    
     "prepare": "husky"
   },
   "keywords": [],
