@@ -11,6 +11,7 @@
     "pretest:local": "npm run generate-plugins",
     "test:integration": "act --job run-local-test --workflows tests/local-test-workflow.yml",
     "generate-plugins": "node scripts/generate-plugin-registry.js",
+    "clean": "rimraf ./dist",
     "prepare": "husky"
   },
   "keywords": [],
@@ -26,6 +27,7 @@
     "@vercel/ncc": "^0.38.3",
     "dotenv": "^17.2.1",
     "husky": "^9.1.7",
+    "rimraf": "^6.0.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
