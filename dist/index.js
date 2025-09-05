@@ -16,9 +16,7 @@ async function run() {
   try {
     const githubToken = core.getInput('GITHUB_TOKEN');
     const plugins = core.getInput('PLUGINS').split(',').map(p => p.trim());
-    const pluginConfigString = core.getInput('PLUGIN_CONFIG');
-    const pluginConfig = JSON.parse(pluginConfigString || '{}');
-    console.log(pluginConfig);
+    const maxPrs = parseInt(core.getInput('MAX_PRS'), 10);
 
     const octokit = github.getOctokit(githubToken);
 
@@ -47,7 +45,7 @@ async function run() {
     } else {
       username = github.context.repo.owner;
     }
-    newReadmeContent = await runCore(octokit, username, plugins, readmeContent, pluginConfig);
+    newReadmeContent = await runCore(octokit, username, plugins, readmeContent, maxPrs);
 
     // Conditional write based on mode
     if (process.env.LOCAL_TEST_MODE === 'true') {
@@ -30007,35 +30005,20 @@ function wrappy (fn, cb) {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const path = __nccwpck_require__(6928);
-const fs = __nccwpck_require__(9896);
 
 // Helper function to escape characters for use in a regular expression
 function escapeRegExp(string) {
   return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-module.exports = async function(octokit, username, plugins, readmeContent, pluginConfig) {
+module.exports = async function(octokit, username, plugins, readmeContent, maxPrs) {
     let newReadmeContent = readmeContent;
-
-    const allPlugins = {};
-    const pluginsDir = __nccwpck_require__.ab + "plugins";
-    const availablePluginNames = fs.readdirSync(__nccwpck_require__.ab + "plugins");
-
-    for (const pluginName of availablePluginNames) {
-        const pluginPath = __nccwpck_require__.ab + "plugins/" + pluginName + '/index.js';
-        if (fs.existsSync(pluginPath)) {
-            allPlugins[pluginName] = require(pluginPath);
-        }
-    }
 
     for (const pluginName of plugins) {
         try {
-            const plugin = allPlugins[pluginName];
-            if (!plugin) {
-                console.warn(`Plugin "${pluginName}" not found or not implemented.`);
-                continue;
-            }
-            const result = await plugin(octokit, username, pluginConfig[pluginName] || {});
+            const pluginPath = __nccwpck_require__.ab + "plugins/" + pluginName + '/index.js';
+            const plugin = require(pluginPath);
+            const result = await plugin(octokit, username, maxPrs);
 
             const tagName = pluginName.toUpperCase();
             const startComment = `<!-- ${tagName}:START -->`;

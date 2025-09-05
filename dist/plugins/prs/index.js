@@ -1,5 +1,4 @@
-module.exports = async function(octokit, username, prsConfig) {
-    const maxPrs = prsConfig && prsConfig.maxPrs ? parseInt(prsConfig.maxPrs, 10) : 5; // Default to 5 if not provided
+module.exports = async function(octokit, username, maxPrs) {
     const { data: { items: pullRequests } } = await octokit.rest.search.issuesAndPullRequests({
         q: `is:pr is:merged author:${username}`,
         sort: 'updated',
