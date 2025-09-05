@@ -15,4 +15,4 @@ jobs:
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_PLUGINS: prs, notable-contributions
           INPUT_PLUGIN_CONFIG: | 
-            {"prs": {"maxPrs": 10}, "notable-contributions": {"maxPrs": 10}}
+            {"prs": {"maxPrs": 6}, "notable-contributions": {"maxPrs": 6}}
