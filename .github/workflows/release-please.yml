@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clean build directory
+        run: rm -rf ./dist
+
       - name: Build
         run: npm run build
 
