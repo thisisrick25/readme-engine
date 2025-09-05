@@ -1,27 +1,22 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import { fileURLToPath } from 'url';
-
-import type { Octokit, PluginModule, BasePluginConfig } from './types.ts';
+import type { Octokit, BasePluginConfig } from './types.ts';
+import { pluginRegistry } from './plugins/index.js';
 
 // Helper function to escape characters for use in a regular expression
 function escapeRegExp(param: string): string {
-  return param.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return param.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-export default async function runCore(octokit: Octokit, username: string, plugins: string[], readmeContent: string, pluginConfig: Record<string, BasePluginConfig> ): Promise<string> {
+export default async function runCore(octokit: Octokit, username: string, plugins: string[], readmeContent: string, pluginConfig: Record<string, BasePluginConfig>): Promise<string> {
     let newReadmeContent = readmeContent;
 
-    const pluginsDirUrl = new URL('plugins/', import.meta.url);
-    const pluginsDirPath = fileURLToPath(pluginsDirUrl);
-
     for (const pluginName of plugins) {
-        try {
-            const pluginPath = path.join(pluginsDirPath, pluginName, 'index.js');
-            if (fs.existsSync(pluginPath)) {
-                const plugin: PluginModule = await import(pluginPath);
-                const result = await plugin.default(octokit, username, pluginConfig[pluginName] || {});
+        const plugin = pluginRegistry[pluginName];
 
+        if (plugin) {
+            try {
+                console.log(`Running plugin: ${pluginName}...`);
+
+                const result = await plugin(octokit, username, pluginConfig[pluginName] || {});
                 const tagName = pluginName.toUpperCase();
                 const startComment = `<!-- ${tagName}:START -->`;
                 const endComment = `<!-- ${tagName}:END -->`;
@@ -29,12 +24,15 @@ export default async function runCore(octokit: Octokit, username: string, plugin
                 const regex = new RegExp(`${escapeRegExp(startComment)}[\\s\\S]*${escapeRegExp(endComment)}`);
 
                 newReadmeContent = newReadmeContent.replace(regex, replacement);
-            } else {
-                console.warn(`Plugin at path "${pluginPath}" not found.`);
+                console.log(`Plugin ${pluginName} finished successfully.`);
+
+            } catch (error) {
+                console.error(`Error running plugin ${pluginName}:`, error);
             }
-        } catch (error) {
-            console.error(`Error running plugin ${pluginName}:`, error);
+        } else {
+            console.warn(`Plugin "${pluginName}" is not recognized or registered.`);
         }
+
     }
 
     return newReadmeContent;

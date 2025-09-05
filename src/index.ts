@@ -21,7 +21,7 @@ async function run(): Promise<string> {
     // Determine source of README content based on mode
     if (process.env.LOCAL_TEST_MODE === 'true') {
       console.log('Running in LOCAL_TEST_MODE.');
-      readmeContent = await fs.readFile('local-template.md', 'utf-8');
+      readmeContent = await fs.readFile('tests/local-template.md', 'utf-8');
     } else {
       // Original remote behavior
       const { owner, repo } = github.context.repo;
@@ -58,8 +58,8 @@ async function run(): Promise<string> {
 
     // Conditional write based on mode
     if (process.env.LOCAL_TEST_MODE === 'true') {
-      await fs.writeFile('local-output.md', newReadmeContent);
-      console.log('Local output written to local-output.md.');
+      await fs.writeFile('tests/local-output.md', newReadmeContent);
+      console.log('Local output written to tests/local-output.md.');
     } else {
       if (newReadmeContent !== readmeContent && readmeSha) {
           await octokit.rest.repos.createOrUpdateFileContents({
