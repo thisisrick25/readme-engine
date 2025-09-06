@@ -6,12 +6,12 @@ If you're looking to add a new feature, a great place to start is by [adding a n
 
 ## Prerequisites
 
-Before you begin, you will need the following installed on your system:
+### Before you begin, you will need the following installed on your system
 
-* Node.js (v20.x or later)
-* npm (usually comes with Node.js)
-* Docker (docker engine must be installed and running for integration tests)
-* act (for running GitHub Actions workflows locally)
+- Node.js (v20.x or later)
+- npm (usually comes with Node.js)
+- Docker (docker engine must be installed and running for integration tests)
+- act (for running GitHub Actions workflows locally)
 
 ## How to Contribute
 
@@ -112,14 +112,14 @@ Thorough testing is crucial. `readme-engine` provides two ways to test your chan
 
 This method is ideal for quickly testing the core logic of the action without the overhead of a full GitHub Actions environment. It directly runs the `src/core.js` logic.
 
-* **Purpose:** Fast iteration and debugging of the action's core functionality.
-* **How to run:**
+- **Purpose:** Fast iteration and debugging of the action's core functionality.
+- **How to run:**
 
   ```bash
   npm run test:local
   ```
 
-* **Output:** This will generate `local-output.md` in your project root, containing the updated README content based on your local changes.
+- **Output:** This will generate `local-output.md` in your project root, containing the updated README content based on your local changes.
 
 ### 2. Integration Testing (with `act`)
 
@@ -127,8 +127,8 @@ First, ensure you have `act` installed. `act` is a tool that allows you to run G
 
 This method simulates the GitHub Actions environment using `act` and runs the actual workflow defined in `local-test-workflow.yml`. This provides a more accurate representation of how your action will behave on GitHub.
 
-* **Purpose:** Verify the action's behavior within a simulated GitHub Actions workflow, including input/output handling and environment variables.
-* **How to run:**
+- **Purpose:** Verify the action's behavior within a simulated GitHub Actions workflow, including input/output handling and environment variables.
+- **How to run:**
 
   ```bash
   npm run test:integration
@@ -136,7 +136,7 @@ This method simulates the GitHub Actions environment using `act` and runs the ac
 
   _(Note: This test requires Docker to be installed and the Docker engine to be running on your machine before you execute the script.)_
 
-* **Output:** This will also generate `local-output.md` in your project root. Check the console output for any errors or warnings from the workflow run.
+- **Output:** This will also generate `local-output.md` in your project root. Check the console output for any errors or warnings from the workflow run.
 
 ## Adding a New Plugin
 
@@ -148,11 +148,11 @@ Our system is designed to make adding new plugins easy.
 
    ```ts
    // src/plugins/my-plugin/index.ts
-   import { Plugin } from '../../types.js';
+   import { Plugin } from "../../types.js";
 
    const myPlugin: Plugin = async (octokit, username, config) => {
-   // Your plugin logic here...
-   return `Hello, ${username}!`;
+     // Your plugin logic here...
+     return `Hello, ${username}!`;
    };
 
    export default myPlugin;
@@ -166,17 +166,17 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0
 
 Examples:
 
-* `feat: add new plugin for notable contributions`
-* `fix: resolve issue with PR fetching logic`
-* `docs: update README with testing instructions`
-* `chore: update dependencies`
+- `feat: add new plugin for notable contributions`
+- `fix: resolve issue with PR fetching logic`
+- `docs: update README with testing instructions`
+- `chore: update dependencies`
 
 ## Pull Request Guidelines
 
-* Ensure your branch is up-to-date with the `main` branch.
-* Provide a clear and concise description of your changes.
-* Reference any related issues (e.g., `Closes #123`).
-* Ensure all tests pass.
+- Ensure your branch is up-to-date with the `main` branch.
+- Provide a clear and concise description of your changes.
+- Reference any related issues (e.g., `Closes #123`).
+- Ensure all tests pass.
 
 ## Code Style and Linting
 
