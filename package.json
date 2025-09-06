@@ -2,21 +2,37 @@
   "name": "github-action",
   "version": "2.1.0",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "ncc build src/index.ts --license licenses.txt",
     "prebuild": "npm run generate-plugins",
     "test:local": "node --import tsx tests/local-test.ts",
     "pretest:local": "npm run generate-plugins",
-    "test:integration": "act --job run-local-test --workflows tests/local-test-workflow.yml",
+    "test:integration": "act -b workflow_dispatch -W tests/local-test-workflow.yml",
     "generate-plugins": "node scripts/generate-plugin-registry.js",
     "clean": "rimraf ./dist",
     "prepare": "husky"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "github-action",
+    "readme",
+    "profile-readme",
+    "automation",
+    "dynamic-readme",
+    "github-stats",
+    "actions",
+    "plugin",
+    "typescript",
+    "nodejs",
+    "metrics",
+    "github-profile"
+  ],
+  "author": {
+    "name": "Swapnaneel Patra",
+    "url": "https://github.com/thisisrick25"
+  },
+  "license": "MIT",
   "description": "",
   "dependencies": {
     "@actions/core": "^1.11.1",
