@@ -10,10 +10,18 @@ const notableContributionsPlugin: Plugin = async (octokit, username, config) => 
         per_page: maxPrs,
     });
 
-    let prList = pullRequests.map(pr => `- [${pr.title}](${pr.html_url})`).join('\n');
+    let prList = '| Notable Contribution |\n|---------------------|\n';
 
-    if (!prList) {
-        prList = 'No notable contributions found.';
+    if (pullRequests.length > 0) {
+        prList += pullRequests.map(pr => {
+            const urlParts = pr.html_url.split('/');
+            const owner = urlParts[3];
+            const repo = urlParts[4];
+            const repoUrl = `https://github.com/${owner}/${repo}`;
+            return `| **[${pr.title}](${pr.html_url})** in [${owner}/${repo}](${repoUrl}) |`;
+        }).join('\n');
+    } else {
+        prList += '| No notable contributions found. |';
     }
 
     return prList;
