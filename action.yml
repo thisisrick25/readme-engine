@@ -1,17 +1,17 @@
-name: 'Display Latest PRs'
-description: 'A GitHub Action to display your latest merged PRs on your profile README.'
-author: 'thisisrick25'
+name: "readme-engine"
+description: "A GitHub Action to dynamically update sections of your profile README with GitHub activity using a plugin-based architecture."
+author: "thisisrick25"
 inputs:
   GITHUB_TOKEN:
-    description: 'The GitHub token to use for authentication.'
+    description: "The GitHub token to use for authentication."
     required: true
   PLUGINS:
-    description: 'A comma-separated list of plugins to run.'
+    description: "A comma-separated list of plugins to run."
     required: true
   PLUGIN_CONFIG:
     description: 'JSON string containing configuration for each plugin (e.g., {"prs": {"maxPrs": 5}, "notable-contributions": {"maxPrs": 10}}).'
     required: false
-    default: '{}'
+    default: "{}"
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: "node20"
+  main: "dist/index.js"
