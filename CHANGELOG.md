@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/thisisrick25/readme-engine/compare/v2.1.0...v2.1.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* **action:** close missing quote in PLUGIN_CONFIG description ([4f57ad2](https://github.com/thisisrick25/readme-engine/commit/4f57ad20515694a63bdb4e3acc66343b1deac4e0))
+
 ## [2.1.0](https://github.com/thisisrick25/readme-engine/compare/v2.0.0...v2.1.0) (2025-09-05)
 
 
