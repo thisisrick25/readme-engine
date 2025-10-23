@@ -31705,9 +31705,18 @@ const notableContributionsPlugin = async (octokit, username, config) => {
         order: 'desc',
         per_page: maxPrs,
     });
-    let prList = pullRequests.map(pr => `- [${pr.title}](${pr.html_url})`).join('\n');
-    if (!prList) {
-        prList = 'No notable contributions found.';
+    let prList = '| Notable Contribution |\n|---------------------|\n';
+    if (pullRequests.length > 0) {
+        prList += pullRequests.map(pr => {
+            const urlParts = pr.html_url.split('/');
+            const owner = urlParts[3];
+            const repo = urlParts[4];
+            const repoUrl = `https://github.com/${owner}/${repo}`;
+            return `| **[${pr.title}](${pr.html_url})** in [${owner}/${repo}](${repoUrl}) |`;
+        }).join('\n');
+    }
+    else {
+        prList += '| No notable contributions found. |';
     }
     return prList;
 };
@@ -31722,9 +31731,18 @@ const prsPlugin = async (octokit, username, config) => {
         order: 'desc',
         per_page: maxPrs,
     });
-    let prList = pullRequests.map(pr => `- [${pr.title}](${pr.html_url})`).join('\n');
-    if (!prList) {
-        prList = 'No recent merged PRs found.';
+    let prList = '| Recent Pull Request |\n|--------------|\n';
+    if (pullRequests.length > 0) {
+        prList += pullRequests.map(pr => {
+            const urlParts = pr.html_url.split('/');
+            const owner = urlParts[3];
+            const repo = urlParts[4];
+            const repoUrl = `https://github.com/${owner}/${repo}`;
+            return `| **[${pr.title}](${pr.html_url})** in [${owner}/${repo}](${repoUrl}) |`;
+        }).join('\n');
+    }
+    else {
+        prList += '| No recent merged PRs found. |';
     }
     return prList;
 };
