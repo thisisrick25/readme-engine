@@ -10,7 +10,7 @@ const notableContributionsPlugin: Plugin = async (octokit, username, config) => 
         per_page: maxPrs,
     });
 
-    let prList = '| Notable Contribution |\n|---------------------|\n';
+    let prList = '### Notable Contributions\n\n';
 
     if (pullRequests.length > 0) {
         prList += pullRequests.map(pr => {
@@ -18,10 +18,10 @@ const notableContributionsPlugin: Plugin = async (octokit, username, config) => 
             const owner = urlParts[3];
             const repo = urlParts[4];
             const repoUrl = `https://github.com/${owner}/${repo}`;
-            return `| **[${pr.title}](${pr.html_url})** in [${owner}/${repo}](${repoUrl}) |`;
+            return `- [${pr.title}](${pr.html_url}) - [${owner}/${repo}](${repoUrl})`;
         }).join('\n');
     } else {
-        prList += '| No notable contributions found. |';
+        prList += 'No notable contributions found.';
     }
 
     return prList;

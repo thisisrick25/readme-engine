@@ -10,7 +10,7 @@ const prsPlugin: Plugin = async (octokit, username, config) => {
         per_page: maxPrs,
     });
 
-    let prList = '| Recent Pull Request |\n|--------------|\n';
+    let prList = '### Recent Pull Requests\n\n';
 
     if (pullRequests.length > 0) {
         prList += pullRequests.map(pr => {
@@ -18,10 +18,10 @@ const prsPlugin: Plugin = async (octokit, username, config) => {
             const owner = urlParts[3];
             const repo = urlParts[4];
             const repoUrl = `https://github.com/${owner}/${repo}`;
-            return `| **[${pr.title}](${pr.html_url})** in [${owner}/${repo}](${repoUrl}) |`;
+            return `- [${pr.title}](${pr.html_url}) - [${owner}/${repo}](${repoUrl})`;
         }).join('\n');
     } else {
-        prList += '| No recent merged PRs found. |';
+        prList += 'No recent merged PRs found.';
     }
 
     return prList;
