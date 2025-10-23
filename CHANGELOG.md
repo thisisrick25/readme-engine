@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/thisisrick25/readme-engine/compare/v2.2.0...v2.3.0) (2025-10-23)
+
+
+### Features
+
+* **plugins:** switch PRs & notable-contributions from table rows to headings + bullet lists; update local test template ([70fa75b](https://github.com/thisisrick25/readme-engine/commit/70fa75bb5ea88dfb66557b99270a27b136aeb1bd))
+
 ## [2.2.0](https://github.com/thisisrick25/readme-engine/compare/v2.1.1...v2.2.0) (2025-10-23)
 
 
