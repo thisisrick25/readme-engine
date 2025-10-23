@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/thisisrick25/readme-engine/compare/v2.1.1...v2.2.0) (2025-10-23)
+
+
+### Features
+
+* **notable-contributions:** render PRs as markdown table and add empty-result fallback ([e3bef31](https://github.com/thisisrick25/readme-engine/commit/e3bef31808c0257ee744a2e14d55de55ace81b58))
+* **prs:** render recent merged PRs as markdown table with repo link and add empty-result fallback ([4cd9302](https://github.com/thisisrick25/readme-engine/commit/4cd9302ddce1d231070644b15da050e0322a7e34))
+
 ## [2.1.1](https://github.com/thisisrick25/readme-engine/compare/v2.1.0...v2.1.1) (2025-10-23)
 
 
