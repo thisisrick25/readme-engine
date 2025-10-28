@@ -18,7 +18,7 @@ const prsPlugin: Plugin = async (octokit, username, config) => {
             const owner = urlParts[3];
             const repo = urlParts[4];
             const repoUrl = `https://github.com/${owner}/${repo}`;
-            return `- [${pr.title}](${pr.html_url}) - [${owner}/${repo}](${repoUrl})`;
+            return `- [${pr.title}](${pr.html_url}) ***in [${owner}/${repo}](${repoUrl})***`;
         }).join('\n');
     } else {
         prList += 'No recent merged PRs found.';
