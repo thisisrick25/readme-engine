@@ -5,6 +5,16 @@ inputs:
   GITHUB_TOKEN:
     description: "The GitHub token to use for authentication."
     required: true
+  PROVIDER:
+    description: 'Optional: provider to use. Defaults to "github". Use "gitlab" to force GitLab mode.'
+    required: false
+    default: "github"
+  GITLAB_TOKEN:
+    description: "Optional: GitLab API token (personal access token with api scope) for GitLab usage."
+    required: false
+  GITLAB_PROJECT_ID:
+    description: "Optional: GitLab project id (numeric) or path. When running in GitLab CI this will be detected from CI_PROJECT_ID."
+    required: false
   PLUGINS:
     description: "A comma-separated list of plugins to run."
     required: true

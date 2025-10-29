@@ -2,4 +2,5 @@ node_modules/
 .env
 .secrets
 src/plugins/index.ts
-tests/local-output.md
+tests/local-output-github.md
+tests/local-output-gitlab.md

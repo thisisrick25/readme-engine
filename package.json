@@ -7,8 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "ncc build src/index.ts --license licenses.txt",
     "prebuild": "npm run generate-plugins",
-    "test:local": "node --import tsx tests/local-test.ts",
     "pretest:local": "npm run generate-plugins",
+    "test:local:github": "node --import tsx tests/local-test-github.ts",
+    "test:local:gitlab": "node --import tsx tests/local-test-gitlab.ts",
     "test:integration": "act -b workflow_dispatch -W tests/local-test-workflow.yml",
     "generate-plugins": "node scripts/generate-plugin-registry.js",
     "clean": "rimraf ./dist",
@@ -36,7 +37,8 @@
   "description": "",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.1"
+    "@actions/github": "^6.0.1",
+    "@gitbeaker/rest": "^43.7.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.1",

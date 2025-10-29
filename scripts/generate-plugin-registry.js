@@ -1,18 +1,18 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // Get the absolute path to the 'src/plugins' directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const pluginsDir = path.resolve(__dirname, '../src/plugins');
-const outputFile = path.resolve(pluginsDir, 'index.ts');
+const pluginsDir = path.resolve(__dirname, "../src/plugins");
+const outputFile = path.resolve(pluginsDir, "index.ts");
 
 async function generateRegistry() {
-  console.log('Generating plugin registry...');
+  console.log("Generating plugin registry...");
   try {
     const pluginDirs = await fs.readdir(pluginsDir, { withFileTypes: true });
-    
+
     const imports = [];
     const registryEntries = [];
 
@@ -20,10 +20,13 @@ async function generateRegistry() {
       // Process only directories, and ignore the 'index.ts' file itself
       if (dirent.isDirectory()) {
         const pluginName = dirent.name;
-        const camelCaseName = pluginName.replace(/-(\w)/g, (_, c) => c.toUpperCase()) + 'Plugin';
+        const varName =
+          pluginName.replace(/-(\w)/g, (_, c) => c.toUpperCase()) +
+          "PluginModule";
 
-        imports.push(`import ${camelCaseName} from './${pluginName}/index.js';`);
-        registryEntries.push(`  '${pluginName}': ${camelCaseName},`);
+        // Import the entire module so we can access per-provider implementations
+        imports.push(`import * as ${varName} from './${pluginName}/index.js';`);
+        registryEntries.push(`  '${pluginName}': ${varName},`);
       }
     }
 
@@ -33,20 +36,19 @@ async function generateRegistry() {
 // Then run \`npm run generate-plugins\` to regenerate this file.     //
 // ---------------------------------------------------------------- //
 
-import type { Plugin } from '../types.js';
+import type { PluginModule } from '../types.js';
 
-${imports.join('\n')}
+${imports.join("\n")}
 
-export const pluginRegistry: Record<string, Plugin> = {
-${registryEntries.join('\n')}
+export const pluginRegistry: Record<string, PluginModule> = {
+${registryEntries.join("\n")}
 };
 `;
 
-    await fs.writeFile(outputFile, fileContent, 'utf-8');
+    await fs.writeFile(outputFile, fileContent, "utf-8");
     console.log(`Plugin registry successfully generated at ${outputFile}`);
-
   } catch (error) {
-    console.error('Error generating plugin registry:', error);
+    console.error("Error generating plugin registry:", error);
     process.exit(1);
   }
 }
