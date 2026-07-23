@@ -71,6 +71,7 @@ Next, add the placeholder comments to your `README.md` file where you want the c
 | :----------------------------------------------------------- | :----------------------------------------------------------------------------- |
 | [`notable-contributions`](src/plugins/notable-contributions) | Displays your most recent merged pull requests to repositories you do not own. |
 | [`prs`](src/plugins/prs)                                     | Fetches and displays your latest merged Pull Requests.                         |
+| [`wakatime`](src/plugins/wakatime)                           | Displays your WakaTime coding activity (languages, editors, total time) over the last 30 days. |
 
 ## Configuration
 
@@ -93,6 +94,22 @@ This configuration will:
 
 - Show up to 8 pull requests for the `prs` plugin.
 - Show up to 4 pull requests for the `notable-contributions` plugin.
+
+### WakaTime API Key
+
+The [`wakatime`](src/plugins/wakatime) plugin requires a WakaTime API key. For security, this is provided via the `WAKATIME_API_KEY` environment variable rather than `PLUGIN_CONFIG`. Add your key from [wakatime.com/settings/api-key](https://wakatime.com/settings/api-key) as a repository secret named `WAKATIME_API_KEY`, then pass it to the step:
+
+```yaml
+- name: Update README
+  uses: thisisrick25/readme-engine@v2
+  env:
+    WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
+  with:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    PLUGINS: prs, notable-contributions, wakatime
+```
+
+See the [WakaTime plugin README](src/plugins/wakatime) for full setup instructions.
 
 ## Contributing
 
