@@ -31877,6 +31877,8 @@ async function run() {
         const pluginConfigString = core.getInput('PLUGIN_CONFIG');
         const pluginConfig = JSON.parse(pluginConfigString || '{}');
         console.log(pluginConfig);
+        const commitAuthorName = core.getInput('COMMIT_AUTHOR_NAME');
+        const commitAuthorEmail = core.getInput('COMMIT_AUTHOR_EMAIL');
         const octokit = github.getOctokit(githubToken);
         // Determine source of README content based on mode
         if (process.env.LOCAL_TEST_MODE === 'true') {
@@ -31921,14 +31923,28 @@ async function run() {
         }
         else {
             if (newReadmeContent !== readmeContent && readmeSha) {
-                await octokit.rest.repos.createOrUpdateFileContents({
+                const commitParams = {
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
                     path: 'README.md',
                     message: 'docs: update README with metrics',
                     content: Buffer.from(newReadmeContent, 'utf-8').toString('base64'),
                     sha: readmeSha // Use stored SHA for remote update
-                });
+                };
+                // If a custom author is fully specified, attribute the commit to that
+                // identity (both author and committer must be set, otherwise the
+                // committer defaults to the token identity, i.e. github-actions[bot]).
+                if (commitAuthorName && commitAuthorEmail) {
+                    const identity = { name: commitAuthorName, email: commitAuthorEmail };
+                    await octokit.rest.repos.createOrUpdateFileContents({
+                        ...commitParams,
+                        author: identity,
+                        committer: identity
+                    });
+                }
+                else {
+                    await octokit.rest.repos.createOrUpdateFileContents(commitParams);
+                }
                 console.log('Updated README with metrics on GitHub.');
             }
             else {
