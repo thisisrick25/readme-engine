@@ -1,13 +1,17 @@
 # WakaTime Plugin
 
-This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) as a single combined block, pulling from every WakaTime endpoint that is accessible on the free tier:
+This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) as a single combined block. You choose which sections to render via the `sections` config option. Each section maps to WakaTime endpoints that are accessible on the free tier:
 
-- **All-Time Total** — lifetime total coding time (`all_time_since_today`).
-- **Last 30 Days** — total, daily average, top languages, and top editors with percentages (`stats/last_30_days`).
-- **All Time** — lifetime top languages and editors with percentages (`stats/all_time`).
-- **Last Year Insights** — rolling one-year top languages and editors (`insights/languages/last_year`, `insights/editors/last_year`). The `insights/*` endpoints only return data for the `last_year` range on the free tier and expose raw seconds only, so percentages are computed by the plugin.
+| Section key  | Renders                                                                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `last30`     | **Last 30 Days** — total, daily average, top languages, and top editors with percentages (`stats/last_30_days`).                            |
+| `allTime`    | **All Time** — lifetime top languages and editors with percentages (`stats/all_time`).                                                      |
+| `sinceToday` | **All-Time Total** — a single lifetime total coding time headline (`all_time_since_today`).                                                  |
+| `insights`   | **Last Year Insights** — rolling one-year top languages and editors (`insights/languages/last_year`, `insights/editors/last_year`).         |
 
-Each section degrades gracefully: if any endpoint is unavailable (for example, `insights/*` on shorter ranges requires a paid plan), that section is simply omitted and the rest still render.
+> The `insights/*` endpoints only return data for the `last_year` range on the free tier and expose raw seconds only, so percentages are computed by the plugin.
+
+Sections render in the order you list them. Each section also degrades gracefully: if an endpoint is unavailable (for example, `insights/*` on shorter ranges requires a paid plan), that section is simply omitted and the rest still render.
 
 ## Prerequisites
 
@@ -93,6 +97,26 @@ Python      ████░░░░░░░░░░░░░░░░   18.3%
 
 ## Configuration
 
-This plugin does not require `PLUGIN_CONFIG`. It optionally honors a `maxPrs`-style top-N limit (defaults to `5`) for how many languages and editors are shown, but the recommended setup needs no configuration.
+Configure which sections to display via the `wakatime.sections` key in `PLUGIN_CONFIG`. It accepts an array of section keys (`last30`, `allTime`, `sinceToday`, `insights`). Sections render in the order given, and duplicates are ignored.
+
+**If `sections` is omitted, only `last30` is rendered** (the default), preserving the original single-block behavior.
+
+```yaml
+- name: Update README with readme-engine
+  uses: thisisrick25/readme-engine@v2
+  env:
+    WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
+  with:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    PLUGINS: wakatime
+    PLUGIN_CONFIG: |
+      {
+        "wakatime": {
+          "sections": ["last30", "allTime", "sinceToday", "insights"]
+        }
+      }
+```
+
+The number of languages and editors shown in each breakdown defaults to `5`.
 
 The WakaTime API key **must** be provided via the `WAKATIME_API_KEY` environment variable, not `PLUGIN_CONFIG`.

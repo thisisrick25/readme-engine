@@ -51,6 +51,24 @@ interface WakaTimeInsightResponse {
 const BAR_LENGTH = 20;
 const BASE_URL = 'https://wakatime.com/api/v1/users/current';
 
+type SectionKey = 'last30' | 'allTime' | 'sinceToday' | 'insights';
+const VALID_SECTIONS: readonly SectionKey[] = ['last30', 'allTime', 'sinceToday', 'insights'];
+const DEFAULT_SECTIONS: readonly SectionKey[] = ['last30'];
+
+function parseSections(config: unknown): SectionKey[] {
+    const raw = (config as { sections?: unknown }).sections;
+    if (!Array.isArray(raw)) {
+        return [...DEFAULT_SECTIONS];
+    }
+    const seen = new Set<SectionKey>();
+    for (const entry of raw) {
+        if (typeof entry === 'string' && (VALID_SECTIONS as readonly string[]).includes(entry)) {
+            seen.add(entry as SectionKey);
+        }
+    }
+    return seen.size > 0 ? [...seen] : [...DEFAULT_SECTIONS];
+}
+
 function makeBar(percent: number): string {
     const filled = Math.round((percent / 100) * BAR_LENGTH);
     const safeFilled = Math.max(0, Math.min(BAR_LENGTH, filled));
@@ -122,6 +140,86 @@ function renderInsightItems(items: WakaTimeInsightItem[], topN: number): string 
     return `\`\`\`text\n${lines.join('\n')}\n\`\`\`\n`;
 }
 
+async function renderLast30(authHeader: string, topN: number): Promise<string> {
+    const response = await fetchJson<WakaTimeStatsResponse>('/stats/last_30_days', authHeader);
+    const data = response?.data;
+    if (!data) {
+        return '';
+    }
+    const summary: string[] = [];
+    if (data.human_readable_total) {
+        summary.push(`**Total:** ${data.human_readable_total}`);
+    }
+    if (data.human_readable_daily_average) {
+        summary.push(`**Daily average:** ${data.human_readable_daily_average}`);
+    }
+    const langs = renderStatItems(data.languages ?? [], topN);
+    const editors = renderStatItems(data.editors ?? [], topN);
+    const block = [
+        summary.length > 0 ? summary.join(' • ') : '',
+        langs ? `_Languages_\n\n${langs}` : '',
+        editors ? `_Editors_\n\n${editors}` : '',
+    ].filter(Boolean).join('\n\n');
+    return block ? `#### Last 30 Days\n\n${block}` : '';
+}
+
+async function renderAllTime(authHeader: string, topN: number): Promise<string> {
+    const response = await fetchJson<WakaTimeStatsResponse>('/stats/all_time', authHeader);
+    const data = response?.data;
+    if (!data) {
+        return '';
+    }
+    const summary = data.human_readable_total ? `**Total:** ${data.human_readable_total}` : '';
+    const langs = renderStatItems(data.languages ?? [], topN);
+    const editors = renderStatItems(data.editors ?? [], topN);
+    const block = [
+        summary,
+        langs ? `_Languages_\n\n${langs}` : '',
+        editors ? `_Editors_\n\n${editors}` : '',
+    ].filter(Boolean).join('\n\n');
+    return block ? `#### All Time\n\n${block}` : '';
+}
+
+async function renderSinceToday(authHeader: string): Promise<string> {
+    const response = await fetchJson<WakaTimeAllTimeResponse>('/all_time_since_today', authHeader);
+    const data = response?.data;
+    if (!data?.text) {
+        return '';
+    }
+    const since = data.range?.start_text ? ` (since ${data.range.start_text})` : '';
+    return `**All-Time Total:** ${data.text}${since}`;
+}
+
+async function renderInsights(authHeader: string, topN: number): Promise<string> {
+    const [langsResponse, editorsResponse] = await Promise.all([
+        fetchJson<WakaTimeInsightResponse>('/insights/languages/last_year', authHeader),
+        fetchJson<WakaTimeInsightResponse>('/insights/editors/last_year', authHeader),
+    ]);
+    const langBlock = renderInsightItems(langsResponse?.data?.languages ?? [], topN);
+    const editorBlock = renderInsightItems(editorsResponse?.data?.editors ?? [], topN);
+    if (!langBlock && !editorBlock) {
+        return '';
+    }
+    const block = [
+        langBlock ? `_Languages_\n\n${langBlock}` : '',
+        editorBlock ? `_Editors_\n\n${editorBlock}` : '',
+    ].filter(Boolean).join('\n\n');
+    return `#### Last Year Insights\n\n${block}`;
+}
+
+async function renderSection(key: SectionKey, authHeader: string, topN: number): Promise<string> {
+    switch (key) {
+        case 'last30':
+            return renderLast30(authHeader, topN);
+        case 'allTime':
+            return renderAllTime(authHeader, topN);
+        case 'sinceToday':
+            return renderSinceToday(authHeader);
+        case 'insights':
+            return renderInsights(authHeader, topN);
+    }
+}
+
 const wakatimePlugin: Plugin = async (_octokit, _username, config) => {
     const heading = '### WakaTime\n\n';
 
@@ -132,81 +230,13 @@ const wakatimePlugin: Plugin = async (_octokit, _username, config) => {
 
     const topN = parseInt(String((config as { maxPrs?: number }).maxPrs ?? 5), 10);
     const authHeader = `Basic ${Buffer.from(apiKey).toString('base64')}`;
+    const selected = parseSections(config);
 
     try {
-        // Fetch every free-tier endpoint in parallel; each resolves to null on failure
-        // so one paid/errored endpoint never blocks the rest of the block.
-        const [last30, allTime, sinceToday, insightLangs, insightEditors] = await Promise.all([
-            fetchJson<WakaTimeStatsResponse>('/stats/last_30_days', authHeader),
-            fetchJson<WakaTimeStatsResponse>('/stats/all_time', authHeader),
-            fetchJson<WakaTimeAllTimeResponse>('/all_time_since_today', authHeader),
-            fetchJson<WakaTimeInsightResponse>('/insights/languages/last_year', authHeader),
-            fetchJson<WakaTimeInsightResponse>('/insights/editors/last_year', authHeader),
-        ]);
-
-        const sections: string[] = [];
-
-        // Lifetime total line (all_time_since_today) — a single headline number.
-        const sinceData = sinceToday?.data;
-        if (sinceData?.text) {
-            const since = sinceData.range?.start_text
-                ? ` (since ${sinceData.range.start_text})`
-                : '';
-            sections.push(`**All-Time Total:** ${sinceData.text}${since}`);
-        }
-
-        // Last 30 days (stats) — total + daily average summary, then breakdowns.
-        const last30Data = last30?.data;
-        if (last30Data) {
-            const summary: string[] = [];
-            if (last30Data.human_readable_total) {
-                summary.push(`**Total:** ${last30Data.human_readable_total}`);
-            }
-            if (last30Data.human_readable_daily_average) {
-                summary.push(`**Daily average:** ${last30Data.human_readable_daily_average}`);
-            }
-            const langs = renderStatItems(last30Data.languages ?? [], topN);
-            const editors = renderStatItems(last30Data.editors ?? [], topN);
-            const block = [
-                summary.length > 0 ? summary.join(' • ') : '',
-                langs ? `_Languages_\n\n${langs}` : '',
-                editors ? `_Editors_\n\n${editors}` : '',
-            ].filter(Boolean).join('\n\n');
-            if (block) {
-                sections.push(`#### Last 30 Days\n\n${block}`);
-            }
-        }
-
-        // All time (stats) — lifetime language/editor breakdown with percent.
-        const allTimeData = allTime?.data;
-        if (allTimeData) {
-            const summary = allTimeData.human_readable_total
-                ? `**Total:** ${allTimeData.human_readable_total}`
-                : '';
-            const langs = renderStatItems(allTimeData.languages ?? [], topN);
-            const editors = renderStatItems(allTimeData.editors ?? [], topN);
-            const block = [
-                summary,
-                langs ? `_Languages_\n\n${langs}` : '',
-                editors ? `_Editors_\n\n${editors}` : '',
-            ].filter(Boolean).join('\n\n');
-            if (block) {
-                sections.push(`#### All Time\n\n${block}`);
-            }
-        }
-
-        // Last year insights — rolling 1-year breakdown (percent computed from seconds).
-        const insightLangItems = insightLangs?.data?.languages ?? [];
-        const insightEditorItems = insightEditors?.data?.editors ?? [];
-        const insightLangBlock = renderInsightItems(insightLangItems, topN);
-        const insightEditorBlock = renderInsightItems(insightEditorItems, topN);
-        if (insightLangBlock || insightEditorBlock) {
-            const block = [
-                insightLangBlock ? `_Languages_\n\n${insightLangBlock}` : '',
-                insightEditorBlock ? `_Editors_\n\n${insightEditorBlock}` : '',
-            ].filter(Boolean).join('\n\n');
-            sections.push(`#### Last Year Insights\n\n${block}`);
-        }
+        const rendered = await Promise.all(
+            selected.map(key => renderSection(key, authHeader, topN)),
+        );
+        const sections = rendered.filter(Boolean);
 
         if (sections.length === 0) {
             return `${heading}No WakaTime data available yet.`;
