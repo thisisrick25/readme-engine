@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0](https://github.com/thisisrick25/readme-engine/compare/v2.5.0...v2.6.0) (2026-07-23)
+
+
+### Features
+
+* **author:** support commit author attribution ([#26](https://github.com/thisisrick25/readme-engine/issues/26)) ([7b037eb](https://github.com/thisisrick25/readme-engine/commit/7b037ebfa159a4d5748aa1bb31741e62c5865e33))
+
 ## [2.5.0](https://github.com/thisisrick25/readme-engine/compare/v2.4.0...v2.5.0) (2026-07-23)
 
 
