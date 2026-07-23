@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/thisisrick25/readme-engine/compare/v2.4.0...v2.5.0) (2026-07-23)
+
+
+### Features
+
+* **wakatime:** add WakaTime coding stats plugin ([#23](https://github.com/thisisrick25/readme-engine/issues/23)) ([b01df5c](https://github.com/thisisrick25/readme-engine/commit/b01df5cae66ace3d05af1b95148ff11f4b9a1455))
+
 ## [2.4.0](https://github.com/thisisrick25/readme-engine/compare/v2.3.0...v2.4.0) (2025-10-28)
 
 
