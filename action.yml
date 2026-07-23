@@ -12,6 +12,12 @@ inputs:
     description: 'JSON string containing configuration for each plugin (e.g., {"prs": {"maxPrs": 5}, "notable-contributions": {"maxPrs": 10}}).'
     required: false
     default: "{}"
+  COMMIT_AUTHOR_NAME:
+    description: "Optional. The name to attribute the automated commit to. Must be set together with COMMIT_AUTHOR_EMAIL; otherwise the commit is made by the default token identity (github-actions[bot])."
+    required: false
+  COMMIT_AUTHOR_EMAIL:
+    description: "Optional. The email to attribute the automated commit to. Must be verified on the target GitHub account for the commit to link to the user and count toward contributions. Must be set together with COMMIT_AUTHOR_NAME."
+    required: false
 runs:
   using: "node20"
   main: "dist/index.js"

@@ -59,9 +59,11 @@ Next, add the placeholder comments to your `README.md` file where you want the c
 
 | Input Name      | Description                                                                   | Required |
 | :-------------- | :---------------------------------------------------------------------------- | :------- |
-| `GITHUB_TOKEN`  | The GitHub token to use for authentication.                                   | `true`   |
-| `PLUGINS`       | A comma-separated list of plugins to run.                                     | `true`   |
-| `PLUGIN_CONFIG` | An optional JSON string for providing specific configurations to each plugin. | `false`  |
+| `GITHUB_TOKEN`        | The GitHub token to use for authentication.                                                                                                       | `true`   |
+| `PLUGINS`             | A comma-separated list of plugins to run.                                                                                                         | `true`   |
+| `PLUGIN_CONFIG`       | An optional JSON string for providing specific configurations to each plugin.                                                                     | `false`  |
+| `COMMIT_AUTHOR_NAME`  | Optional. Name to attribute the automated commit to. Must be set together with `COMMIT_AUTHOR_EMAIL`, otherwise the commit is made by the token identity (`github-actions[bot]`). | `false`  |
+| `COMMIT_AUTHOR_EMAIL` | Optional. Email to attribute the automated commit to. Must be verified on the target GitHub account to link the commit and count contributions. Must be set together with `COMMIT_AUTHOR_NAME`. | `false`  |
 
 ### Plugins
 
@@ -110,6 +112,22 @@ The [`wakatime`](src/plugins/wakatime) plugin requires a WakaTime API key. For s
 ```
 
 See the [WakaTime plugin README](src/plugins/wakatime) for full setup instructions.
+
+### Commit Author Attribution
+
+By default the automated README commit is authored by the token identity (`github-actions[bot]`). To attribute it to your own account instead, set both `COMMIT_AUTHOR_NAME` and `COMMIT_AUTHOR_EMAIL`:
+
+```yaml
+- name: Update README
+  uses: thisisrick25/readme-engine@v2
+  with:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    PLUGINS: prs, notable-contributions
+    COMMIT_AUTHOR_NAME: your-username
+    COMMIT_AUTHOR_EMAIL: your-verified-email@example.com
+```
+
+Both inputs are required together. The email must be verified on your GitHub account for the commit to link to your profile and count toward your contribution graph. No personal access token is needed — the default `GITHUB_TOKEN` still authorizes the request.
 
 ## Contributing
 
