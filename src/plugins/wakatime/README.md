@@ -1,6 +1,13 @@
 # WakaTime Plugin
 
-This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) over the last 30 days, including a summary of total time, top programming languages, and top editors.
+This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) as a single combined block, pulling from every WakaTime endpoint that is accessible on the free tier:
+
+- **All-Time Total** — lifetime total coding time (`all_time_since_today`).
+- **Last 30 Days** — total, daily average, top languages, and top editors with percentages (`stats/last_30_days`).
+- **All Time** — lifetime top languages and editors with percentages (`stats/all_time`).
+- **Last Year Insights** — rolling one-year top languages and editors (`insights/languages/last_year`, `insights/editors/last_year`). The `insights/*` endpoints only return data for the `last_year` range on the free tier and expose raw seconds only, so percentages are computed by the plugin.
+
+Each section degrades gracefully: if any endpoint is unavailable (for example, `insights/*` on shorter ranges requires a paid plan), that section is simply omitted and the rest still render.
 
 ## Prerequisites
 
@@ -41,23 +48,45 @@ The content between these comments is automatically replaced by the generated Wa
 
 ```markdown
 <!-- WAKATIME:START -->
-### WakaTime (Last 30 Days)
+### WakaTime
+
+**All-Time Total:** 2,264 hrs 20 mins (since Thu Sep 3rd 2020)
+
+#### Last 30 Days
 
 **Total:** 42 hrs 18 mins • **Daily average:** 1 hr 24 mins
 
-**Languages**
+_Languages_
 
 ​```text
 TypeScript  ██████████░░░░░░░░░░   48.2%  20 hrs 24 mins
 Python      █████░░░░░░░░░░░░░░░░   24.1%  10 hrs 12 mins
-Markdown    ██░░░░░░░░░░░░░░░░░░░   11.0%  4 hrs 39 mins
 ​```
 
-**Editors**
+_Editors_
 
 ​```text
 VS Code     ████████████████░░░░   82.5%  34 hrs 54 mins
-Neovim      ███░░░░░░░░░░░░░░░░░░   17.5%  7 hrs 24 mins
+​```
+
+#### All Time
+
+**Total:** 1,304 hrs 51 mins
+
+_Languages_
+
+​```text
+Other       ████████░░░░░░░░░░░░   42.4%  552 hrs 45 mins
+TypeScript  ███░░░░░░░░░░░░░░░░░░   16.6%  216 hrs 42 mins
+​```
+
+#### Last Year Insights
+
+_Languages_
+
+​```text
+TypeScript  ████████░░░░░░░░░░░░   40.1%  161h 25m
+Python      ████░░░░░░░░░░░░░░░░   18.3%  73h 40m
 ​```
 <!-- WAKATIME:END -->
 ```
