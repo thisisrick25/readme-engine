@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0](https://github.com/thisisrick25/readme-engine/compare/v2.6.0...v2.7.0) (2026-07-23)
+
+
+### Features
+
+* **wakatime:** render all free-tier endpoints in combined block ([#29](https://github.com/thisisrick25/readme-engine/issues/29)) ([3296ab6](https://github.com/thisisrick25/readme-engine/commit/3296ab63ea30fb45fa0202bad9bf452e1aaea739))
+
 ## [2.6.0](https://github.com/thisisrick25/readme-engine/compare/v2.5.0...v2.6.0) (2026-07-23)
 
 
