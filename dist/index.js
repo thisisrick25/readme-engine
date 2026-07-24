@@ -31751,8 +31751,18 @@ const prsPlugin = async (octokit, username, config) => {
 ;// CONCATENATED MODULE: ./src/plugins/wakatime/index.ts
 const BAR_LENGTH = 20;
 const BASE_URL = 'https://wakatime.com/api/v1/users/current';
-const VALID_SECTIONS = ['last30', 'allTime', 'sinceToday', 'insightsLanguages', 'insightsEditors'];
-const DEFAULT_SECTIONS = ['last30'];
+const VALID_SECTIONS = [
+    'last30Total',
+    'last30Languages',
+    'last30Editors',
+    'allTimeTotal',
+    'allTimeLanguages',
+    'allTimeEditors',
+    'sinceToday',
+    'insightsLanguages',
+    'insightsEditors',
+];
+const DEFAULT_SECTIONS = ['last30Languages'];
 function parseSections(config) {
     const raw = config.sections;
     if (!Array.isArray(raw)) {
@@ -31797,6 +31807,20 @@ async function fetchJson(path, authHeader) {
         return null;
     }
 }
+// Granular section keys can share an endpoint (e.g. last30Total/Languages/Editors
+// all read /stats/last_30_days), so memoize each path per run to fetch it once.
+function createEndpointCache(authHeader) {
+    const cache = new Map();
+    return (path) => {
+        const existing = cache.get(path);
+        if (existing) {
+            return existing;
+        }
+        const pending = fetchJson(path, authHeader);
+        cache.set(path, pending);
+        return pending;
+    };
+}
 // Renders top-N items that already carry percent + text (stats resource).
 function renderStatItems(items, topN) {
     const top = items.slice(0, topN);
@@ -31833,9 +31857,8 @@ function renderInsightItems(items, topN) {
     });
     return `\`\`\`text\n${lines.join('\n')}\n\`\`\`\n`;
 }
-async function renderLast30(authHeader, topN) {
-    const response = await fetchJson('/stats/last_30_days', authHeader);
-    const data = response?.data;
+async function renderLast30Total(fetchEndpoint) {
+    const data = (await fetchEndpoint('/stats/last_30_days'))?.data;
     if (!data) {
         return '';
     }
@@ -31846,62 +31869,73 @@ async function renderLast30(authHeader, topN) {
     if (data.human_readable_daily_average) {
         summary.push(`**Daily average:** ${data.human_readable_daily_average}`);
     }
-    const langs = renderStatItems(data.languages ?? [], topN);
-    const editors = renderStatItems(data.editors ?? [], topN);
-    const block = [
-        summary.length > 0 ? summary.join(' • ') : '',
-        langs ? `_Languages_\n\n${langs}` : '',
-        editors ? `_Editors_\n\n${editors}` : '',
-    ].filter(Boolean).join('\n\n');
-    return block ? `#### Last 30 Days\n\n${block}` : '';
+    return summary.length > 0 ? `#### Last 30 Days\n\n${summary.join(' • ')}` : '';
 }
-async function renderAllTime(authHeader, topN) {
-    const response = await fetchJson('/stats/all_time', authHeader);
-    const data = response?.data;
-    if (!data) {
+async function renderLast30Languages(fetchEndpoint, topN) {
+    const data = (await fetchEndpoint('/stats/last_30_days'))?.data;
+    const block = renderStatItems(data?.languages ?? [], topN);
+    return block ? `#### Last 30 Days — Languages\n\n${block}` : '';
+}
+async function renderLast30Editors(fetchEndpoint, topN) {
+    const data = (await fetchEndpoint('/stats/last_30_days'))?.data;
+    const block = renderStatItems(data?.editors ?? [], topN);
+    return block ? `#### Last 30 Days — Editors\n\n${block}` : '';
+}
+async function renderAllTimeTotal(fetchEndpoint) {
+    const data = (await fetchEndpoint('/stats/all_time'))?.data;
+    if (!data?.human_readable_total) {
         return '';
     }
-    const summary = data.human_readable_total ? `**Total:** ${data.human_readable_total}` : '';
-    const langs = renderStatItems(data.languages ?? [], topN);
-    const editors = renderStatItems(data.editors ?? [], topN);
-    const block = [
-        summary,
-        langs ? `_Languages_\n\n${langs}` : '',
-        editors ? `_Editors_\n\n${editors}` : '',
-    ].filter(Boolean).join('\n\n');
-    return block ? `#### All Time\n\n${block}` : '';
+    return `#### All Time\n\n**Total:** ${data.human_readable_total}`;
 }
-async function renderSinceToday(authHeader) {
-    const response = await fetchJson('/all_time_since_today', authHeader);
-    const data = response?.data;
+async function renderAllTimeLanguages(fetchEndpoint, topN) {
+    const data = (await fetchEndpoint('/stats/all_time'))?.data;
+    const block = renderStatItems(data?.languages ?? [], topN);
+    return block ? `#### All Time — Languages\n\n${block}` : '';
+}
+async function renderAllTimeEditors(fetchEndpoint, topN) {
+    const data = (await fetchEndpoint('/stats/all_time'))?.data;
+    const block = renderStatItems(data?.editors ?? [], topN);
+    return block ? `#### All Time — Editors\n\n${block}` : '';
+}
+async function renderSinceToday(fetchEndpoint) {
+    const data = (await fetchEndpoint('/all_time_since_today'))?.data;
     if (!data?.text) {
         return '';
     }
     const since = data.range?.start_text ? ` (since ${data.range.start_text})` : '';
     return `**All-Time Total:** ${data.text}${since}`;
 }
-async function renderInsightsLanguages(authHeader, topN) {
-    const response = await fetchJson('/insights/languages/last_year', authHeader);
-    const block = renderInsightItems(response?.data?.languages ?? [], topN);
+async function renderInsightsLanguages(fetchEndpoint, topN) {
+    const data = (await fetchEndpoint('/insights/languages/last_year'))?.data;
+    const block = renderInsightItems(data?.languages ?? [], topN);
     return block ? `#### Last Year Languages\n\n${block}` : '';
 }
-async function renderInsightsEditors(authHeader, topN) {
-    const response = await fetchJson('/insights/editors/last_year', authHeader);
-    const block = renderInsightItems(response?.data?.editors ?? [], topN);
+async function renderInsightsEditors(fetchEndpoint, topN) {
+    const data = (await fetchEndpoint('/insights/editors/last_year'))?.data;
+    const block = renderInsightItems(data?.editors ?? [], topN);
     return block ? `#### Last Year Editors\n\n${block}` : '';
 }
-async function renderSection(key, authHeader, topN) {
+async function renderSection(key, fetchEndpoint, topN) {
     switch (key) {
-        case 'last30':
-            return renderLast30(authHeader, topN);
-        case 'allTime':
-            return renderAllTime(authHeader, topN);
+        case 'last30Total':
+            return renderLast30Total(fetchEndpoint);
+        case 'last30Languages':
+            return renderLast30Languages(fetchEndpoint, topN);
+        case 'last30Editors':
+            return renderLast30Editors(fetchEndpoint, topN);
+        case 'allTimeTotal':
+            return renderAllTimeTotal(fetchEndpoint);
+        case 'allTimeLanguages':
+            return renderAllTimeLanguages(fetchEndpoint, topN);
+        case 'allTimeEditors':
+            return renderAllTimeEditors(fetchEndpoint, topN);
         case 'sinceToday':
-            return renderSinceToday(authHeader);
+            return renderSinceToday(fetchEndpoint);
         case 'insightsLanguages':
-            return renderInsightsLanguages(authHeader, topN);
+            return renderInsightsLanguages(fetchEndpoint, topN);
         case 'insightsEditors':
-            return renderInsightsEditors(authHeader, topN);
+            return renderInsightsEditors(fetchEndpoint, topN);
     }
 }
 const wakatimePlugin = async (_octokit, _username, config) => {
@@ -31913,8 +31947,9 @@ const wakatimePlugin = async (_octokit, _username, config) => {
     const topN = parseInt(String(config.maxPrs ?? 5), 10);
     const authHeader = `Basic ${Buffer.from(apiKey).toString('base64')}`;
     const selected = parseSections(config);
+    const fetchEndpoint = createEndpointCache(authHeader);
     try {
-        const rendered = await Promise.all(selected.map(key => renderSection(key, authHeader, topN)));
+        const rendered = await Promise.all(selected.map(key => renderSection(key, fetchEndpoint, topN)));
         const sections = rendered.filter(Boolean);
         if (sections.length === 0) {
             return `${heading}No WakaTime data available yet.`;
