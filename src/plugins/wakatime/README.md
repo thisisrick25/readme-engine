@@ -1,24 +1,39 @@
 # WakaTime Plugin
 
-This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) as a single combined block. You choose which sections to render via the `sections` config option. Each section maps to WakaTime endpoints that are accessible on the free tier:
+This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) as a single combined block. You choose which sections to render via the `sections` config option.
 
-| Section key         | Renders                                                                                              | Endpoint                       |
-| ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `last30Total`       | **Last 30 Days** — total coding time and daily average headline.                                    | `stats/last_30_days`           |
-| `last30Languages`   | **Last 30 Days — Languages** — top languages with percentages.                                      | `stats/last_30_days`           |
-| `last30Editors`     | **Last 30 Days — Editors** — top editors with percentages.                                          | `stats/last_30_days`           |
-| `allTimeTotal`      | **All Time** — lifetime total coding time headline.                                                 | `stats/all_time`               |
-| `allTimeLanguages`  | **All Time — Languages** — lifetime top languages with percentages.                                 | `stats/all_time`               |
-| `allTimeEditors`    | **All Time — Editors** — lifetime top editors with percentages.                                     | `stats/all_time`               |
-| `sinceToday`        | **All-Time Total** — a single lifetime total coding time headline.                                  | `all_time_since_today`         |
-| `insightsLanguages` | **Last Year Languages** — rolling one-year top languages.                                           | `insights/languages/last_year` |
-| `insightsEditors`   | **Last Year Editors** — rolling one-year top editors.                                               | `insights/editors/last_year`   |
+Each section key is a **time window** (`last7`, `last30`, `allTime`, `lastYear`) combined with a **facet** (`Total`, `Languages`, `Editors`, `Categories`, `BestDay`), giving keys like `last30Languages` or `allTimeCategories`. There is also a standalone `sinceToday` key. Every window reads a `stats/:range` endpoint that is accessible on the free tier.
 
-> Each facet is an independent section key. Keys sharing an endpoint (for example `last30Total`, `last30Languages`, `last30Editors`) reuse a single request per run.
+**Windows** (each reads `stats/<range>`):
+
+| Window     | Range              | Endpoint               |
+| ---------- | ------------------ | ---------------------- |
+| `last7`    | Last 7 days        | `stats/last_7_days`    |
+| `last30`   | Last 30 days       | `stats/last_30_days`   |
+| `allTime`  | Lifetime           | `stats/all_time`       |
+| `lastYear` | Rolling 12 months  | `stats/last_year`      |
+
+**Facets** (append to any window, e.g. `last7Languages`):
+
+| Facet        | Renders                                                                    |
+| ------------ | -------------------------------------------------------------------------- |
+| `Total`      | Total coding time and daily average headline.                              |
+| `Languages`  | Top languages with percentages, bars, and per-item AI/manual split.        |
+| `Editors`    | Top editors with percentages, bars, and per-item AI/manual split.          |
+| `Categories` | Top activity categories (e.g. AI Coding, Writing Docs) with percentages.   |
+| `BestDay`    | The single most productive day in the window.                              |
+
+**Standalone key:**
+
+| Section key  | Renders                                                            | Endpoint               |
+| ------------ | ----------------------------------------------------------------- | ---------------------- |
+| `sinceToday` | **All-Time Total** — a single lifetime total coding time headline. | `all_time_since_today` |
+
+> Each facet is an independent section key. Keys sharing an endpoint (for example `last30Total`, `last30Languages`, `last30Editors` all read `stats/last_30_days`) reuse a single request per run.
 >
-> The `insightsLanguages` and `insightsEditors` endpoints only return data for the `last_year` range on the free tier and expose raw seconds only, so percentages are computed by the plugin.
+> `Languages`, `Editors`, and `Categories` items are annotated inline with their AI-assisted vs. manual coding split (e.g. `[AI 62% · Manual 38%]`) when WakaTime provides those figures.
 
-Sections render in the order you list them. Each section also degrades gracefully: if an endpoint is unavailable (for example, `insights/*` on shorter ranges requires a paid plan), that section is simply omitted and the rest still render.
+Sections render in the order you list them. Each section also degrades gracefully: if an endpoint or facet is unavailable, that section is simply omitted and the rest still render.
 
 ## Prerequisites
 
@@ -70,45 +85,39 @@ The content between these comments is automatically replaced by the generated Wa
 #### Last 30 Days — Languages
 
 ​```text
-TypeScript  ██████████░░░░░░░░░░   48.2%  20 hrs 24 mins
-Python      █████░░░░░░░░░░░░░░░░   24.1%  10 hrs 12 mins
+TypeScript  ██████████░░░░░░░░░░   48.2%  20 hrs 24 mins [AI 61% · Manual 39%]
+Python      █████░░░░░░░░░░░░░░░░   24.1%  10 hrs 12 mins [AI 45% · Manual 55%]
 ​```
 
 #### Last 30 Days — Editors
 
 ​```text
-VS Code     ████████████████░░░░   82.5%  34 hrs 54 mins
+VS Code     ████████████████░░░░   82.5%  34 hrs 54 mins [AI 58% · Manual 42%]
 ​```
 
-#### All Time
-
-**Total:** 1,304 hrs 51 mins
-
-#### All Time — Languages
+#### Last 30 Days — Categories
 
 ​```text
-Other       ████████░░░░░░░░░░░░   42.4%  552 hrs 45 mins
-TypeScript  ███░░░░░░░░░░░░░░░░░░   16.6%  216 hrs 42 mins
+AI Coding   ███████████████░░░░░   73.2%  30 hrs 58 mins
+Coding      ██░░░░░░░░░░░░░░░░░░░   10.3%   4 hrs 21 mins
 ​```
 
-#### Last Year Languages
+#### Last 30 Days — Best Day
+
+**4 hrs 0 mins** on 2026-07-23
+
+#### Last Year — Languages
 
 ​```text
-TypeScript  ████████░░░░░░░░░░░░   40.1%  161h 25m
-Python      ████░░░░░░░░░░░░░░░░   18.3%  73h 40m
-​```
-
-#### Last Year Editors
-
-​```text
-VS Code     ██████████░░░░░░░░░░   52.9%  213h 10m
+TypeScript  ████████░░░░░░░░░░░░   40.1%  161 hrs 25 mins [AI 55% · Manual 45%]
+Python      ████░░░░░░░░░░░░░░░░   18.3%   73 hrs 40 mins [AI 40% · Manual 60%]
 ​```
 <!-- WAKATIME:END -->
 ```
 
 ## Configuration
 
-Configure which sections to display via the `wakatime.sections` key in `PLUGIN_CONFIG`. It accepts an array of section keys (`last30Total`, `last30Languages`, `last30Editors`, `allTimeTotal`, `allTimeLanguages`, `allTimeEditors`, `sinceToday`, `insightsLanguages`, `insightsEditors`). Sections render in the order given, and duplicates are ignored.
+Configure which sections to display via the `wakatime.sections` key in `PLUGIN_CONFIG`. It accepts an array of section keys, each being a window (`last7`, `last30`, `allTime`, `lastYear`) + facet (`Total`, `Languages`, `Editors`, `Categories`, `BestDay`) — e.g. `last7Total`, `last30Languages`, `allTimeCategories`, `lastYearBestDay` — plus the standalone `sinceToday`. Sections render in the order given, and duplicates are ignored.
 
 **If `sections` is omitted, only `last30Languages` is rendered** (the default).
 
@@ -123,7 +132,7 @@ Configure which sections to display via the `wakatime.sections` key in `PLUGIN_C
     PLUGIN_CONFIG: |
       {
         "wakatime": {
-          "sections": ["last30Total", "last30Languages", "last30Editors", "allTimeTotal", "allTimeLanguages", "allTimeEditors", "sinceToday", "insightsLanguages", "insightsEditors"]
+          "sections": ["last30Total", "last30Languages", "last30Editors", "last30Categories", "last30BestDay", "lastYearLanguages", "sinceToday"]
         }
       }
 ```
