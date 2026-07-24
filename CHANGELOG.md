@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.0](https://github.com/thisisrick25/readme-engine/compare/v2.10.0...v2.11.0) (2026-07-24)
+
+
+### Features
+
+* **core:** per-section plugin markers via map return contract ([#41](https://github.com/thisisrick25/readme-engine/issues/41)) ([423171f](https://github.com/thisisrick25/readme-engine/commit/423171fc67153676a12e1bf55eeaa9e84d9a8ebb))
+
 ## [2.10.0](https://github.com/thisisrick25/readme-engine/compare/v2.9.0...v2.10.0) (2026-07-24)
 
 
