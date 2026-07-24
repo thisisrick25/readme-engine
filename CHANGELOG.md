@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0](https://github.com/thisisrick25/readme-engine/compare/v2.7.0...v2.8.0) (2026-07-24)
+
+
+### Features
+
+* **wakatime:** split insights into separate language and editor sections ([#32](https://github.com/thisisrick25/readme-engine/issues/32)) ([3a83c22](https://github.com/thisisrick25/readme-engine/commit/3a83c22e73c5b871dd010d8db86f1e352af65fd2))
+
 ## [2.7.0](https://github.com/thisisrick25/readme-engine/compare/v2.6.0...v2.7.0) (2026-07-23)
 
 
