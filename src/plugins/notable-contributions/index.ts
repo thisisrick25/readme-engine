@@ -24,7 +24,7 @@ const notableContributionsPlugin: Plugin = async (octokit, username, config) => 
         prList += 'No notable contributions found.';
     }
 
-    return prList;
+    return { '': prList };
 }
 
 export default notableContributionsPlugin;
