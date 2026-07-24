@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.0](https://github.com/thisisrick25/readme-engine/compare/v2.9.0...v2.10.0) (2026-07-24)
+
+
+### Features
+
+* **wakatime:** add time windows, categories, best-day and AI/manual split ([#38](https://github.com/thisisrick25/readme-engine/issues/38)) ([af263c4](https://github.com/thisisrick25/readme-engine/commit/af263c4d3fa35252124ab34f25b68b89869b614c))
+
 ## [2.9.0](https://github.com/thisisrick25/readme-engine/compare/v2.8.0...v2.9.0) (2026-07-24)
 
 
