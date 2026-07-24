@@ -51,8 +51,8 @@ interface WakaTimeInsightResponse {
 const BAR_LENGTH = 20;
 const BASE_URL = 'https://wakatime.com/api/v1/users/current';
 
-type SectionKey = 'last30' | 'allTime' | 'sinceToday' | 'insights';
-const VALID_SECTIONS: readonly SectionKey[] = ['last30', 'allTime', 'sinceToday', 'insights'];
+type SectionKey = 'last30' | 'allTime' | 'sinceToday' | 'insightsLanguages' | 'insightsEditors';
+const VALID_SECTIONS: readonly SectionKey[] = ['last30', 'allTime', 'sinceToday', 'insightsLanguages', 'insightsEditors'];
 const DEFAULT_SECTIONS: readonly SectionKey[] = ['last30'];
 
 function parseSections(config: unknown): SectionKey[] {
@@ -190,21 +190,16 @@ async function renderSinceToday(authHeader: string): Promise<string> {
     return `**All-Time Total:** ${data.text}${since}`;
 }
 
-async function renderInsights(authHeader: string, topN: number): Promise<string> {
-    const [langsResponse, editorsResponse] = await Promise.all([
-        fetchJson<WakaTimeInsightResponse>('/insights/languages/last_year', authHeader),
-        fetchJson<WakaTimeInsightResponse>('/insights/editors/last_year', authHeader),
-    ]);
-    const langBlock = renderInsightItems(langsResponse?.data?.languages ?? [], topN);
-    const editorBlock = renderInsightItems(editorsResponse?.data?.editors ?? [], topN);
-    if (!langBlock && !editorBlock) {
-        return '';
-    }
-    const block = [
-        langBlock ? `_Languages_\n\n${langBlock}` : '',
-        editorBlock ? `_Editors_\n\n${editorBlock}` : '',
-    ].filter(Boolean).join('\n\n');
-    return `#### Last Year Insights\n\n${block}`;
+async function renderInsightsLanguages(authHeader: string, topN: number): Promise<string> {
+    const response = await fetchJson<WakaTimeInsightResponse>('/insights/languages/last_year', authHeader);
+    const block = renderInsightItems(response?.data?.languages ?? [], topN);
+    return block ? `#### Last Year Languages\n\n${block}` : '';
+}
+
+async function renderInsightsEditors(authHeader: string, topN: number): Promise<string> {
+    const response = await fetchJson<WakaTimeInsightResponse>('/insights/editors/last_year', authHeader);
+    const block = renderInsightItems(response?.data?.editors ?? [], topN);
+    return block ? `#### Last Year Editors\n\n${block}` : '';
 }
 
 async function renderSection(key: SectionKey, authHeader: string, topN: number): Promise<string> {
@@ -215,8 +210,10 @@ async function renderSection(key: SectionKey, authHeader: string, topN: number):
             return renderAllTime(authHeader, topN);
         case 'sinceToday':
             return renderSinceToday(authHeader);
-        case 'insights':
-            return renderInsights(authHeader, topN);
+        case 'insightsLanguages':
+            return renderInsightsLanguages(authHeader, topN);
+        case 'insightsEditors':
+            return renderInsightsEditors(authHeader, topN);
     }
 }
 

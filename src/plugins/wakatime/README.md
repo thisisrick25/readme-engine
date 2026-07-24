@@ -2,14 +2,15 @@
 
 This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) as a single combined block. You choose which sections to render via the `sections` config option. Each section maps to WakaTime endpoints that are accessible on the free tier:
 
-| Section key  | Renders                                                                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `last30`     | **Last 30 Days** — total, daily average, top languages, and top editors with percentages (`stats/last_30_days`).                            |
-| `allTime`    | **All Time** — lifetime top languages and editors with percentages (`stats/all_time`).                                                      |
-| `sinceToday` | **All-Time Total** — a single lifetime total coding time headline (`all_time_since_today`).                                                  |
-| `insights`   | **Last Year Insights** — rolling one-year top languages and editors (`insights/languages/last_year`, `insights/editors/last_year`).         |
+| Section key         | Renders                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `last30`            | **Last 30 Days** — total, daily average, top languages, and top editors with percentages (`stats/last_30_days`).  |
+| `allTime`           | **All Time** — lifetime top languages and editors with percentages (`stats/all_time`).                            |
+| `sinceToday`        | **All-Time Total** — a single lifetime total coding time headline (`all_time_since_today`).                        |
+| `insightsLanguages` | **Last Year Languages** — rolling one-year top languages (`insights/languages/last_year`).                        |
+| `insightsEditors`   | **Last Year Editors** — rolling one-year top editors (`insights/editors/last_year`).                              |
 
-> The `insights/*` endpoints only return data for the `last_year` range on the free tier and expose raw seconds only, so percentages are computed by the plugin.
+> The `insightsLanguages` and `insightsEditors` endpoints only return data for the `last_year` range on the free tier and expose raw seconds only, so percentages are computed by the plugin.
 
 Sections render in the order you list them. Each section also degrades gracefully: if an endpoint is unavailable (for example, `insights/*` on shorter ranges requires a paid plan), that section is simply omitted and the rest still render.
 
@@ -84,20 +85,24 @@ Other       ████████░░░░░░░░░░░░   42.4%
 TypeScript  ███░░░░░░░░░░░░░░░░░░   16.6%  216 hrs 42 mins
 ​```
 
-#### Last Year Insights
-
-_Languages_
+#### Last Year Languages
 
 ​```text
 TypeScript  ████████░░░░░░░░░░░░   40.1%  161h 25m
 Python      ████░░░░░░░░░░░░░░░░   18.3%  73h 40m
+​```
+
+#### Last Year Editors
+
+​```text
+VS Code     ██████████░░░░░░░░░░   52.9%  213h 10m
 ​```
 <!-- WAKATIME:END -->
 ```
 
 ## Configuration
 
-Configure which sections to display via the `wakatime.sections` key in `PLUGIN_CONFIG`. It accepts an array of section keys (`last30`, `allTime`, `sinceToday`, `insights`). Sections render in the order given, and duplicates are ignored.
+Configure which sections to display via the `wakatime.sections` key in `PLUGIN_CONFIG`. It accepts an array of section keys (`last30`, `allTime`, `sinceToday`, `insightsLanguages`, `insightsEditors`). Sections render in the order given, and duplicates are ignored.
 
 **If `sections` is omitted, only `last30` is rendered** (the default), preserving the original single-block behavior.
 
@@ -112,7 +117,7 @@ Configure which sections to display via the `wakatime.sections` key in `PLUGIN_C
     PLUGIN_CONFIG: |
       {
         "wakatime": {
-          "sections": ["last30", "allTime", "sinceToday", "insights"]
+          "sections": ["last30", "allTime", "sinceToday", "insightsLanguages", "insightsEditors"]
         }
       }
 ```
