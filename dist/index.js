@@ -31718,7 +31718,7 @@ const notableContributionsPlugin = async (octokit, username, config) => {
     else {
         prList += 'No notable contributions found.';
     }
-    return prList;
+    return { '': prList };
 };
 /* harmony default export */ const notable_contributions = (notableContributionsPlugin);
 
@@ -31744,7 +31744,7 @@ const prsPlugin = async (octokit, username, config) => {
     else {
         prList += 'No recent merged PRs found.';
     }
-    return prList;
+    return { '': prList };
 };
 /* harmony default export */ const prs = (prsPlugin);
 
@@ -31840,7 +31840,7 @@ function renderStatItems(items, topN) {
         const percent = `${item.percent.toFixed(1)}%`.padStart(6, ' ');
         return `${name}  ${bar}  ${percent}  ${item.text}${aiManualAnnotation(item)}`;
     });
-    return `\`\`\`text\n${lines.join('\n')}\n\`\`\`\n`;
+    return `<pre>\n${lines.join('\n')}\n</pre>`;
 }
 async function fetchWindow(window, fetchEndpoint) {
     return (await fetchEndpoint(WINDOWS[window].path))?.data;
@@ -31918,10 +31918,9 @@ async function renderSection(key, fetchEndpoint, topN) {
     return '';
 }
 const wakatimePlugin = async (_octokit, _username, config) => {
-    const heading = '### WakaTime\n\n';
     const apiKey = process.env.WAKATIME_API_KEY;
     if (!apiKey) {
-        return `${heading}WakaTime stats are unavailable because the \`WAKATIME_API_KEY\` secret is not set.`;
+        return { '': '### WakaTime\n\nWakaTime stats are unavailable because the `WAKATIME_API_KEY` secret is not set.' };
     }
     const topN = parseInt(String(config.maxPrs ?? 5), 10);
     const authHeader = `Basic ${Buffer.from(apiKey).toString('base64')}`;
@@ -31929,15 +31928,18 @@ const wakatimePlugin = async (_octokit, _username, config) => {
     const fetchEndpoint = createEndpointCache(authHeader);
     try {
         const rendered = await Promise.all(selected.map(key => renderSection(key, fetchEndpoint, topN)));
-        const sections = rendered.filter(Boolean);
-        if (sections.length === 0) {
-            return `${heading}No WakaTime data available yet.`;
-        }
-        return `${heading}${sections.join('\n\n').trimEnd()}`;
+        const output = {};
+        selected.forEach((key, index) => {
+            const content = rendered[index];
+            if (content) {
+                output[key.toUpperCase()] = content;
+            }
+        });
+        return output;
     }
     catch (error) {
         console.error('Error fetching WakaTime stats:', error);
-        return `${heading}An error occurred while fetching WakaTime stats.`;
+        return { '': '### WakaTime\n\nAn error occurred while fetching WakaTime stats.' };
     }
 };
 /* harmony default export */ const wakatime = (wakatimePlugin);
@@ -31970,13 +31972,16 @@ async function runCore(octokit, username, plugins, readmeContent, pluginConfig) 
         if (plugin) {
             try {
                 console.log(`Running plugin: ${pluginName}...`);
-                const result = await plugin(octokit, username, pluginConfig[pluginName] || {});
-                const tagName = pluginName.toUpperCase();
-                const startComment = `<!-- ${tagName}:START -->`;
-                const endComment = `<!-- ${tagName}:END -->`;
-                const replacement = `${startComment}\n${result}\n${endComment}`;
-                const regex = new RegExp(`${escapeRegExp(startComment)}[\\s\\S]*${escapeRegExp(endComment)}`);
-                newReadmeContent = newReadmeContent.replace(regex, replacement);
+                const sections = await plugin(octokit, username, pluginConfig[pluginName] || {});
+                const baseTag = pluginName.toUpperCase();
+                for (const [suffix, content] of Object.entries(sections)) {
+                    const tagName = suffix ? `${baseTag}_${suffix}` : baseTag;
+                    const startComment = `<!-- ${tagName}:START -->`;
+                    const endComment = `<!-- ${tagName}:END -->`;
+                    const replacement = `${startComment}\n${content}\n${endComment}`;
+                    const regex = new RegExp(`${escapeRegExp(startComment)}[\\s\\S]*${escapeRegExp(endComment)}`);
+                    newReadmeContent = newReadmeContent.replace(regex, replacement);
+                }
                 console.log(`Plugin ${pluginName} finished successfully.`);
             }
             catch (error) {
