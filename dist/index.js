@@ -31751,7 +31751,7 @@ const prsPlugin = async (octokit, username, config) => {
 ;// CONCATENATED MODULE: ./src/plugins/wakatime/index.ts
 const BAR_LENGTH = 20;
 const BASE_URL = 'https://wakatime.com/api/v1/users/current';
-const VALID_SECTIONS = ['last30', 'allTime', 'sinceToday', 'insights'];
+const VALID_SECTIONS = ['last30', 'allTime', 'sinceToday', 'insightsLanguages', 'insightsEditors'];
 const DEFAULT_SECTIONS = ['last30'];
 function parseSections(config) {
     const raw = config.sections;
@@ -31880,21 +31880,15 @@ async function renderSinceToday(authHeader) {
     const since = data.range?.start_text ? ` (since ${data.range.start_text})` : '';
     return `**All-Time Total:** ${data.text}${since}`;
 }
-async function renderInsights(authHeader, topN) {
-    const [langsResponse, editorsResponse] = await Promise.all([
-        fetchJson('/insights/languages/last_year', authHeader),
-        fetchJson('/insights/editors/last_year', authHeader),
-    ]);
-    const langBlock = renderInsightItems(langsResponse?.data?.languages ?? [], topN);
-    const editorBlock = renderInsightItems(editorsResponse?.data?.editors ?? [], topN);
-    if (!langBlock && !editorBlock) {
-        return '';
-    }
-    const block = [
-        langBlock ? `_Languages_\n\n${langBlock}` : '',
-        editorBlock ? `_Editors_\n\n${editorBlock}` : '',
-    ].filter(Boolean).join('\n\n');
-    return `#### Last Year Insights\n\n${block}`;
+async function renderInsightsLanguages(authHeader, topN) {
+    const response = await fetchJson('/insights/languages/last_year', authHeader);
+    const block = renderInsightItems(response?.data?.languages ?? [], topN);
+    return block ? `#### Last Year Languages\n\n${block}` : '';
+}
+async function renderInsightsEditors(authHeader, topN) {
+    const response = await fetchJson('/insights/editors/last_year', authHeader);
+    const block = renderInsightItems(response?.data?.editors ?? [], topN);
+    return block ? `#### Last Year Editors\n\n${block}` : '';
 }
 async function renderSection(key, authHeader, topN) {
     switch (key) {
@@ -31904,8 +31898,10 @@ async function renderSection(key, authHeader, topN) {
             return renderAllTime(authHeader, topN);
         case 'sinceToday':
             return renderSinceToday(authHeader);
-        case 'insights':
-            return renderInsights(authHeader, topN);
+        case 'insightsLanguages':
+            return renderInsightsLanguages(authHeader, topN);
+        case 'insightsEditors':
+            return renderInsightsEditors(authHeader, topN);
     }
 }
 const wakatimePlugin = async (_octokit, _username, config) => {
