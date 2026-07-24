@@ -24,7 +24,7 @@ const prsPlugin: Plugin = async (octokit, username, config) => {
         prList += 'No recent merged PRs found.';
     }
 
-    return prList;
+    return { '': prList };
 }
 
 export default prsPlugin;

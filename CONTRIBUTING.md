@@ -146,17 +146,22 @@ Our system is designed to make adding new plugins easy.
 
 2. **Implement the Plugin**: Inside this new folder, create an `index.ts` file. This file must export a default function that conforms to the Plugin type defined in `src/types.ts`.
 
+   A plugin returns a `PluginSections` map (`Record<string, string>`) of marker suffix to content. The engine replaces each `<!-- <PLUGINNAME_SUFFIX>:START -->` / `<!-- <PLUGINNAME_SUFFIX>:END -->` pair in the README with the matching content. An empty-string key (`''`) targets the plugin's bare marker `<!-- <PLUGINNAME>:START/END -->`; a non-empty suffix targets `<!-- <PLUGINNAME>_<SUFFIX>:START/END -->`. Suffixes let one plugin populate several independent markers (e.g. arranged side by side in an HTML table). Sections whose markers are absent from the README are silently skipped.
+
    ```ts
    // src/plugins/my-plugin/index.ts
-   import { Plugin } from "../../types.js";
+   import type { Plugin } from "../../types.js";
 
    const myPlugin: Plugin = async (octokit, username, config) => {
      // Your plugin logic here...
-     return `Hello, ${username}!`;
+     // Single-marker plugin: use the '' key to target <!-- MY-PLUGIN:START/END -->
+     return { "": `Hello, ${username}!` };
    };
 
    export default myPlugin;
    ```
+
+   To emit multiple independent markers, return more keys, e.g. `{ GREETING: "Hi!", FOOTER: "Bye!" }` populates `<!-- MY-PLUGIN_GREETING:START/END -->` and `<!-- MY-PLUGIN_FOOTER:START/END -->`.
 
 3. That's It! The plugin registry is automatically updated. The next time you run npm test, `npm run test:local`, or `npm run build`, the pre script will run and automatically add your new plugin to `src/plugins/index.ts`.
 

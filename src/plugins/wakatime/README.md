@@ -1,6 +1,6 @@
 # WakaTime Plugin
 
-This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com) as a single combined block. You choose which sections to render via the `sections` config option.
+This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com). You choose which sections to render via the `sections` config option, and **each selected section is emitted under its own marker** so you can place sections anywhere in your README — including side by side inside an HTML table.
 
 Each section key is a **time window** (`last7`, `last30`, `allTime`, `lastYear`) combined with a **facet** (`Total`, `Languages`, `Editors`, `Categories`, `BestDay`), giving keys like `last30Languages` or `allTimeCategories`. There is also a standalone `sinceToday` key. Every window reads a `stats/:range` endpoint that is accessible on the free tier.
 
@@ -59,60 +59,60 @@ To enable this plugin, include `wakatime` in the `PLUGINS` input and pass the AP
 
 The API key is read from the environment (`process.env.WAKATIME_API_KEY`) and is intentionally **not** part of `PLUGIN_CONFIG`, keeping the secret out of the README output and config JSON.
 
-## Placeholder
+## Placeholders
 
-Add the following placeholder comments to your target Markdown file where you want the stats injected:
+Each selected section is injected into **its own marker pair**, named `WAKATIME_<SECTIONKEY>` where `<SECTIONKEY>` is the config key uppercased. Add a marker pair for every section you list in `sections`:
 
 ```markdown
-<!-- WAKATIME:START -->
-<!-- WAKATIME:END -->
+<!-- WAKATIME_LAST30LANGUAGES:START -->
+<!-- WAKATIME_LAST30LANGUAGES:END -->
+
+<!-- WAKATIME_SINCETODAY:START -->
+<!-- WAKATIME_SINCETODAY:END -->
 ```
 
-The content between these comments is automatically replaced by the generated WakaTime stats block.
+The content between each pair is automatically replaced with that section's rendered output. Only markers you add are populated — a section with no matching marker is silently skipped.
+
+### Side-by-side layout
+
+Because every section has its own marker, you can wrap them in an HTML table to render sections in columns. The plugin renders bars inside `<pre>` blocks (not fenced code), which display correctly inside `<td>` cells on GitHub:
+
+```html
+<table>
+  <tr>
+    <td>
+      <!-- WAKATIME_LAST30LANGUAGES:START -->
+      <!-- WAKATIME_LAST30LANGUAGES:END -->
+    </td>
+    <td>
+      <!-- WAKATIME_ALLTIMELANGUAGES:START -->
+      <!-- WAKATIME_ALLTIMELANGUAGES:END -->
+    </td>
+  </tr>
+</table>
+```
 
 ## Example Output
 
-```markdown
-<!-- WAKATIME:START -->
-### WakaTime
+With `sections: ["last30Languages", "sinceToday"]`, the `WAKATIME_LAST30LANGUAGES` marker is populated with:
 
-**All-Time Total:** 2,264 hrs 20 mins (since Thu Sep 3rd 2020)
-
-#### Last 30 Days
-
-**Total:** 42 hrs 18 mins • **Daily average:** 1 hr 24 mins
-
+```html
+<!-- WAKATIME_LAST30LANGUAGES:START -->
 #### Last 30 Days — Languages
 
-​```text
+<pre>
 TypeScript  ██████████░░░░░░░░░░   48.2%  20 hrs 24 mins [AI 61% · Manual 39%]
 Python      █████░░░░░░░░░░░░░░░░   24.1%  10 hrs 12 mins [AI 45% · Manual 55%]
-​```
+</pre>
+<!-- WAKATIME_LAST30LANGUAGES:END -->
+```
 
-#### Last 30 Days — Editors
+…and the `WAKATIME_SINCETODAY` marker with:
 
-​```text
-VS Code     ████████████████░░░░   82.5%  34 hrs 54 mins [AI 58% · Manual 42%]
-​```
-
-#### Last 30 Days — Categories
-
-​```text
-AI Coding   ███████████████░░░░░   73.2%  30 hrs 58 mins
-Coding      ██░░░░░░░░░░░░░░░░░░░   10.3%   4 hrs 21 mins
-​```
-
-#### Last 30 Days — Best Day
-
-**4 hrs 0 mins** on 2026-07-23
-
-#### Last Year — Languages
-
-​```text
-TypeScript  ████████░░░░░░░░░░░░   40.1%  161 hrs 25 mins [AI 55% · Manual 45%]
-Python      ████░░░░░░░░░░░░░░░░   18.3%   73 hrs 40 mins [AI 40% · Manual 60%]
-​```
-<!-- WAKATIME:END -->
+```html
+<!-- WAKATIME_SINCETODAY:START -->
+**All-Time Total:** 2,264 hrs 20 mins (since Thu Sep 3rd 2020)
+<!-- WAKATIME_SINCETODAY:END -->
 ```
 
 ## Configuration

@@ -15,6 +15,15 @@ export interface BasePluginConfig {
 }
 
 /**
+ * The value a plugin returns: a map of marker suffix -> rendered content.
+ * An empty-string suffix targets the plugin's base marker
+ * `<!-- NAME:START/END -->`; a non-empty suffix targets
+ * `<!-- NAME_SUFFIX:START/END -->`, letting one plugin populate many
+ * independent marker pairs (e.g. side-by-side layouts in an HTML table).
+ */
+export type PluginSections = Record<string, string>;
+
+/**
  * Defines the function signature for a readme-engine plugin.
  * This is the "contract" that all plugins must adhere to.
  */
@@ -22,7 +31,7 @@ export type Plugin = (
   octokit: Octokit,
   username: string,
   config: BasePluginConfig
-) => Promise<string>;
+) => Promise<PluginSections>;
 
 /**
  * Defines the shape of a dynamically imported plugin module.

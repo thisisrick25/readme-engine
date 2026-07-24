@@ -1,4 +1,4 @@
-import type { Plugin } from '../../types.js';
+import type { Plugin, PluginSections } from '../../types.js';
 
 // --- Stats resource shapes (stats/:range) -------------------------------
 // Stat items carry percent + text, plus AI/manual second counts as strings.
@@ -155,7 +155,7 @@ function renderStatItems(items: WakaTimeStatItem[], topN: number): string {
         const percent = `${item.percent.toFixed(1)}%`.padStart(6, ' ');
         return `${name}  ${bar}  ${percent}  ${item.text}${aiManualAnnotation(item)}`;
     });
-    return `\`\`\`text\n${lines.join('\n')}\n\`\`\`\n`;
+    return `<pre>\n${lines.join('\n')}\n</pre>`;
 }
 
 async function fetchWindow(
@@ -251,11 +251,9 @@ async function renderSection(key: SectionKey, fetchEndpoint: EndpointFetch, topN
 }
 
 const wakatimePlugin: Plugin = async (_octokit, _username, config) => {
-    const heading = '### WakaTime\n\n';
-
     const apiKey = process.env.WAKATIME_API_KEY;
     if (!apiKey) {
-        return `${heading}WakaTime stats are unavailable because the \`WAKATIME_API_KEY\` secret is not set.`;
+        return { '': '### WakaTime\n\nWakaTime stats are unavailable because the `WAKATIME_API_KEY` secret is not set.' };
     }
 
     const topN = parseInt(String((config as { maxPrs?: number }).maxPrs ?? 5), 10);
@@ -267,16 +265,17 @@ const wakatimePlugin: Plugin = async (_octokit, _username, config) => {
         const rendered = await Promise.all(
             selected.map(key => renderSection(key, fetchEndpoint, topN)),
         );
-        const sections = rendered.filter(Boolean);
-
-        if (sections.length === 0) {
-            return `${heading}No WakaTime data available yet.`;
-        }
-
-        return `${heading}${sections.join('\n\n').trimEnd()}`;
+        const output: PluginSections = {};
+        selected.forEach((key, index) => {
+            const content = rendered[index];
+            if (content) {
+                output[key.toUpperCase()] = content;
+            }
+        });
+        return output;
     } catch (error) {
         console.error('Error fetching WakaTime stats:', error);
-        return `${heading}An error occurred while fetching WakaTime stats.`;
+        return { '': '### WakaTime\n\nAn error occurred while fetching WakaTime stats.' };
     }
 };
 

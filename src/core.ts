@@ -16,14 +16,18 @@ export default async function runCore(octokit: Octokit, username: string, plugin
             try {
                 console.log(`Running plugin: ${pluginName}...`);
 
-                const result = await plugin(octokit, username, pluginConfig[pluginName] || {});
-                const tagName = pluginName.toUpperCase();
-                const startComment = `<!-- ${tagName}:START -->`;
-                const endComment = `<!-- ${tagName}:END -->`;
-                const replacement = `${startComment}\n${result}\n${endComment}`;
-                const regex = new RegExp(`${escapeRegExp(startComment)}[\\s\\S]*${escapeRegExp(endComment)}`);
+                const sections = await plugin(octokit, username, pluginConfig[pluginName] || {});
+                const baseTag = pluginName.toUpperCase();
 
-                newReadmeContent = newReadmeContent.replace(regex, replacement);
+                for (const [suffix, content] of Object.entries(sections)) {
+                    const tagName = suffix ? `${baseTag}_${suffix}` : baseTag;
+                    const startComment = `<!-- ${tagName}:START -->`;
+                    const endComment = `<!-- ${tagName}:END -->`;
+                    const replacement = `${startComment}\n${content}\n${endComment}`;
+                    const regex = new RegExp(`${escapeRegExp(startComment)}[\\s\\S]*${escapeRegExp(endComment)}`);
+
+                    newReadmeContent = newReadmeContent.replace(regex, replacement);
+                }
                 console.log(`Plugin ${pluginName} finished successfully.`);
 
             } catch (error) {
