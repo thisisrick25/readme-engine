@@ -31751,16 +31751,17 @@ const prsPlugin = async (octokit, username, config) => {
 ;// CONCATENATED MODULE: ./src/plugins/wakatime/index.ts
 const BAR_LENGTH = 20;
 const BASE_URL = 'https://wakatime.com/api/v1/users/current';
+const WINDOWS = {
+    last7: { path: '/stats/last_7_days', label: 'Last 7 Days' },
+    last30: { path: '/stats/last_30_days', label: 'Last 30 Days' },
+    allTime: { path: '/stats/all_time', label: 'All Time' },
+    lastYear: { path: '/stats/last_year', label: 'Last Year' },
+};
+const FACETS = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay'];
+const WINDOW_KEYS = ['last7', 'last30', 'allTime', 'lastYear'];
 const VALID_SECTIONS = [
-    'last30Total',
-    'last30Languages',
-    'last30Editors',
-    'allTimeTotal',
-    'allTimeLanguages',
-    'allTimeEditors',
+    ...WINDOW_KEYS.flatMap(w => FACETS.map(f => `${w}${f}`)),
     'sinceToday',
-    'insightsLanguages',
-    'insightsEditors',
 ];
 const DEFAULT_SECTIONS = ['last30Languages'];
 function parseSections(config) {
@@ -31781,16 +31782,20 @@ function makeBar(percent) {
     const safeFilled = Math.max(0, Math.min(BAR_LENGTH, filled));
     return '█'.repeat(safeFilled) + '░'.repeat(BAR_LENGTH - safeFilled);
 }
-// Turn a raw second count into a compact "Xh Ym" human string, since the
-// insights endpoint (unlike stats) does not provide a human-readable text field.
-function humanizeSeconds(totalSeconds) {
-    const totalMinutes = Math.round(totalSeconds / 60);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    if (hours > 0) {
-        return `${hours}h ${minutes}m`;
+// AI/manual second counts arrive as strings; produce a compact "AI 62% · Manual 38%"
+// annotation, returning '' when the split is unavailable or empty.
+function aiManualAnnotation(item) {
+    const ai = Number(item.ai_coding_seconds);
+    const manual = Number(item.manual_coding_seconds);
+    if (!Number.isFinite(ai) || !Number.isFinite(manual)) {
+        return '';
     }
-    return `${minutes}m`;
+    const total = ai + manual;
+    if (total <= 0) {
+        return '';
+    }
+    const aiPct = Math.round((ai / total) * 100);
+    return ` [AI ${aiPct}% · Manual ${100 - aiPct}%]`;
 }
 async function fetchJson(path, authHeader) {
     try {
@@ -31821,7 +31826,8 @@ function createEndpointCache(authHeader) {
         return pending;
     };
 }
-// Renders top-N items that already carry percent + text (stats resource).
+// Renders top-N items that carry percent + text, annotating each with its
+// AI/manual coding split when available.
 function renderStatItems(items, topN) {
     const top = items.slice(0, topN);
     if (top.length === 0) {
@@ -31832,33 +31838,15 @@ function renderStatItems(items, topN) {
         const name = item.name.padEnd(maxNameLength, ' ');
         const bar = makeBar(item.percent);
         const percent = `${item.percent.toFixed(1)}%`.padStart(6, ' ');
-        return `${name}  ${bar}  ${percent}  ${item.text}`;
+        return `${name}  ${bar}  ${percent}  ${item.text}${aiManualAnnotation(item)}`;
     });
     return `\`\`\`text\n${lines.join('\n')}\n\`\`\`\n`;
 }
-// Renders top-N insight items, computing percent from the summed seconds
-// because insight items expose only name + total_seconds.
-function renderInsightItems(items, topN) {
-    if (items.length === 0) {
-        return '';
-    }
-    const totalSeconds = items.reduce((sum, item) => sum + item.total_seconds, 0);
-    if (totalSeconds <= 0) {
-        return '';
-    }
-    const top = items.slice(0, topN);
-    const maxNameLength = Math.max(...top.map(item => item.name.length));
-    const lines = top.map(item => {
-        const percentValue = (item.total_seconds / totalSeconds) * 100;
-        const name = item.name.padEnd(maxNameLength, ' ');
-        const bar = makeBar(percentValue);
-        const percent = `${percentValue.toFixed(1)}%`.padStart(6, ' ');
-        return `${name}  ${bar}  ${percent}  ${humanizeSeconds(item.total_seconds)}`;
-    });
-    return `\`\`\`text\n${lines.join('\n')}\n\`\`\`\n`;
+async function fetchWindow(window, fetchEndpoint) {
+    return (await fetchEndpoint(WINDOWS[window].path))?.data;
 }
-async function renderLast30Total(fetchEndpoint) {
-    const data = (await fetchEndpoint('/stats/last_30_days'))?.data;
+async function renderTotal(window, fetchEndpoint) {
+    const data = await fetchWindow(window, fetchEndpoint);
     if (!data) {
         return '';
     }
@@ -31869,34 +31857,30 @@ async function renderLast30Total(fetchEndpoint) {
     if (data.human_readable_daily_average) {
         summary.push(`**Daily average:** ${data.human_readable_daily_average}`);
     }
-    return summary.length > 0 ? `#### Last 30 Days\n\n${summary.join(' • ')}` : '';
+    return summary.length > 0 ? `#### ${WINDOWS[window].label}\n\n${summary.join(' • ')}` : '';
 }
-async function renderLast30Languages(fetchEndpoint, topN) {
-    const data = (await fetchEndpoint('/stats/last_30_days'))?.data;
+async function renderLanguages(window, fetchEndpoint, topN) {
+    const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.languages ?? [], topN);
-    return block ? `#### Last 30 Days — Languages\n\n${block}` : '';
+    return block ? `#### ${WINDOWS[window].label} — Languages\n\n${block}` : '';
 }
-async function renderLast30Editors(fetchEndpoint, topN) {
-    const data = (await fetchEndpoint('/stats/last_30_days'))?.data;
+async function renderEditors(window, fetchEndpoint, topN) {
+    const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.editors ?? [], topN);
-    return block ? `#### Last 30 Days — Editors\n\n${block}` : '';
+    return block ? `#### ${WINDOWS[window].label} — Editors\n\n${block}` : '';
 }
-async function renderAllTimeTotal(fetchEndpoint) {
-    const data = (await fetchEndpoint('/stats/all_time'))?.data;
-    if (!data?.human_readable_total) {
+async function renderCategories(window, fetchEndpoint, topN) {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const block = renderStatItems(data?.categories ?? [], topN);
+    return block ? `#### ${WINDOWS[window].label} — Categories\n\n${block}` : '';
+}
+async function renderBestDay(window, fetchEndpoint) {
+    const best = (await fetchWindow(window, fetchEndpoint))?.best_day;
+    if (!best?.text) {
         return '';
     }
-    return `#### All Time\n\n**Total:** ${data.human_readable_total}`;
-}
-async function renderAllTimeLanguages(fetchEndpoint, topN) {
-    const data = (await fetchEndpoint('/stats/all_time'))?.data;
-    const block = renderStatItems(data?.languages ?? [], topN);
-    return block ? `#### All Time — Languages\n\n${block}` : '';
-}
-async function renderAllTimeEditors(fetchEndpoint, topN) {
-    const data = (await fetchEndpoint('/stats/all_time'))?.data;
-    const block = renderStatItems(data?.editors ?? [], topN);
-    return block ? `#### All Time — Editors\n\n${block}` : '';
+    const date = best.date ? ` on ${best.date}` : '';
+    return `#### ${WINDOWS[window].label} — Best Day\n\n**${best.text}**${date}`;
 }
 async function renderSinceToday(fetchEndpoint) {
     const data = (await fetchEndpoint('/all_time_since_today'))?.data;
@@ -31906,37 +31890,32 @@ async function renderSinceToday(fetchEndpoint) {
     const since = data.range?.start_text ? ` (since ${data.range.start_text})` : '';
     return `**All-Time Total:** ${data.text}${since}`;
 }
-async function renderInsightsLanguages(fetchEndpoint, topN) {
-    const data = (await fetchEndpoint('/insights/languages/last_year'))?.data;
-    const block = renderInsightItems(data?.languages ?? [], topN);
-    return block ? `#### Last Year Languages\n\n${block}` : '';
-}
-async function renderInsightsEditors(fetchEndpoint, topN) {
-    const data = (await fetchEndpoint('/insights/editors/last_year'))?.data;
-    const block = renderInsightItems(data?.editors ?? [], topN);
-    return block ? `#### Last Year Editors\n\n${block}` : '';
+function renderFacet(window, facet, fetchEndpoint, topN) {
+    switch (facet) {
+        case 'Total':
+            return renderTotal(window, fetchEndpoint);
+        case 'Languages':
+            return renderLanguages(window, fetchEndpoint, topN);
+        case 'Editors':
+            return renderEditors(window, fetchEndpoint, topN);
+        case 'Categories':
+            return renderCategories(window, fetchEndpoint, topN);
+        case 'BestDay':
+            return renderBestDay(window, fetchEndpoint);
+    }
 }
 async function renderSection(key, fetchEndpoint, topN) {
-    switch (key) {
-        case 'last30Total':
-            return renderLast30Total(fetchEndpoint);
-        case 'last30Languages':
-            return renderLast30Languages(fetchEndpoint, topN);
-        case 'last30Editors':
-            return renderLast30Editors(fetchEndpoint, topN);
-        case 'allTimeTotal':
-            return renderAllTimeTotal(fetchEndpoint);
-        case 'allTimeLanguages':
-            return renderAllTimeLanguages(fetchEndpoint, topN);
-        case 'allTimeEditors':
-            return renderAllTimeEditors(fetchEndpoint, topN);
-        case 'sinceToday':
-            return renderSinceToday(fetchEndpoint);
-        case 'insightsLanguages':
-            return renderInsightsLanguages(fetchEndpoint, topN);
-        case 'insightsEditors':
-            return renderInsightsEditors(fetchEndpoint, topN);
+    if (key === 'sinceToday') {
+        return renderSinceToday(fetchEndpoint);
     }
+    for (const window of WINDOW_KEYS) {
+        for (const facet of FACETS) {
+            if (key === `${window}${facet}`) {
+                return renderFacet(window, facet, fetchEndpoint, topN);
+            }
+        }
+    }
+    return '';
 }
 const wakatimePlugin = async (_octokit, _username, config) => {
     const heading = '### WakaTime\n\n';
