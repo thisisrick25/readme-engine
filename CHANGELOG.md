@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0](https://github.com/thisisrick25/readme-engine/compare/v2.8.0...v2.9.0) (2026-07-24)
+
+
+### Features
+
+* **wakatime:** split sections into independent per-facet keys ([#35](https://github.com/thisisrick25/readme-engine/issues/35)) ([d656396](https://github.com/thisisrick25/readme-engine/commit/d65639646bcdff206bfea18adf6576481226232b))
+
 ## [2.8.0](https://github.com/thisisrick25/readme-engine/compare/v2.7.0...v2.8.0) (2026-07-24)
 
 
