@@ -2,18 +2,19 @@
 
 This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com). You choose which sections to render via the `sections` config option, and **each selected section is emitted under its own marker** so you can place sections anywhere in your README — including side by side inside an HTML table.
 
-Each section key is a **time window** (`last7`, `last30`, `allTime`, `lastYear`) combined with a **facet** (`Total`, `Languages`, `Editors`, `Categories`, `BestDay`), giving keys like `last30Languages` or `allTimeCategories`. There is also a standalone `sinceToday` key. Every window reads a `stats/:range` endpoint that is accessible on the free tier.
+Each section key is a **time window** (`today`, `last7`, `last30`, `allTime`, `lastYear`) combined with a **facet** (`Total`, `Languages`, `Editors`, `Categories`, `BestDay`, `AiCost`, `AiTokens`), giving keys like `last30Languages` or `todayAiCost`. There is also a standalone `sinceToday` key. Every window reads a free-tier endpoint.
 
-**Windows** (each reads `stats/<range>`):
+**Windows:**
 
 | Window     | Range              | Endpoint               |
 | ---------- | ------------------ | ---------------------- |
+| `today`    | Today so far       | `status_bar/today`     |
 | `last7`    | Last 7 days        | `stats/last_7_days`    |
 | `last30`   | Last 30 days       | `stats/last_30_days`   |
 | `allTime`  | Lifetime           | `stats/all_time`       |
 | `lastYear` | Rolling 12 months  | `stats/last_year`      |
 
-**Facets** (append to any window, e.g. `last7Languages`):
+**Facets** (append to any window, e.g. `last7Languages`, `todayAiCost`):
 
 | Facet        | Renders                                                                    |
 | ------------ | -------------------------------------------------------------------------- |
@@ -22,6 +23,10 @@ Each section key is a **time window** (`last7`, `last30`, `allTime`, `lastYear`)
 | `Editors`    | Top editors with percentages, bars, and per-item AI/manual split.          |
 | `Categories` | Top activity categories (e.g. AI Coding, Writing Docs) with percentages.   |
 | `BestDay`    | The single most productive day in the window.                              |
+| `AiCost`     | Total AI model spend plus a per-model cost breakdown with bars.            |
+| `AiTokens`   | AI input and output token counts (abbreviated, e.g. `4.2M`).               |
+
+> The `today` window omits `Total`'s daily-average line and has no `BestDay` (a single day); those render nothing.
 
 **Standalone keys:**
 
