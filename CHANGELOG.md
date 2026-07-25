@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.0](https://github.com/thisisrick25/readme-engine/compare/v2.11.0...v2.12.0) (2026-07-25)
+
+
+### Features
+
+* **wakatime:** add summaries today projects leaders goals durations sections ([#44](https://github.com/thisisrick25/readme-engine/issues/44)) ([028436f](https://github.com/thisisrick25/readme-engine/commit/028436f5a185c9d2a733ec1f75a252f559229004))
+
 ## [2.11.0](https://github.com/thisisrick25/readme-engine/compare/v2.10.0...v2.11.0) (2026-07-24)
 
 
