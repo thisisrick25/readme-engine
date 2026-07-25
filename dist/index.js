@@ -31872,17 +31872,17 @@ async function renderTotal(window, fetchEndpoint) {
 async function renderLanguages(window, fetchEndpoint, topN) {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.languages ?? [], topN);
-    return block ? `#### ${WINDOWS[window].label} — Languages\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label}: Languages**\n\n${block}` : '';
 }
 async function renderEditors(window, fetchEndpoint, topN) {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.editors ?? [], topN);
-    return block ? `#### ${WINDOWS[window].label} — Editors\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label}: Editors**\n\n${block}` : '';
 }
 async function renderCategories(window, fetchEndpoint, topN) {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.categories ?? [], topN);
-    return block ? `#### ${WINDOWS[window].label} — Categories\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label}: Categories**\n\n${block}` : '';
 }
 async function renderBestDay(window, fetchEndpoint) {
     const best = (await fetchWindow(window, fetchEndpoint))?.best_day;
@@ -31921,8 +31921,8 @@ async function renderSummaries(fetchEndpoint) {
     });
     const total = response?.cumulative_total?.text;
     const heading = total
-        ? `#### Last 7 Days — Activity\n\n**Total:** ${total}`
-        : '#### Last 7 Days — Activity';
+        ? `**Last 7 Days: Activity**\n\n**Total:** ${total}`
+        : '**Last 7 Days: Activity**';
     return `${heading}\n\n<pre>\n${lines.join('\n')}\n</pre>`;
 }
 async function renderToday(fetchEndpoint) {
@@ -31942,7 +31942,7 @@ async function renderProjects(fetchEndpoint, topN) {
         return '';
     }
     const list = names.map(name => `- ${name}`).join('\n');
-    return `#### Recent Projects\n\n${list}`;
+    return `**Recent Projects**\n\n${list}`;
 }
 async function renderLeaders(fetchEndpoint) {
     const rank = (await fetchEndpoint('https://wakatime.com/api/v1/leaders'))?.current_user?.rank;
