@@ -16,6 +16,11 @@ interface WakaTimeBestDay {
     text?: string;
 }
 
+interface WakaTimeAiModel {
+    name?: string;
+    cost?: number;
+}
+
 interface WakaTimeStatsData {
     human_readable_total?: string;
     human_readable_daily_average?: string;
@@ -23,6 +28,10 @@ interface WakaTimeStatsData {
     editors?: WakaTimeStatItem[];
     categories?: WakaTimeStatItem[];
     best_day?: WakaTimeBestDay;
+    ai_model_total_cost?: number;
+    ai_model_breakdown?: WakaTimeAiModel[];
+    ai_input_tokens?: number;
+    ai_output_tokens?: number;
 }
 
 interface WakaTimeStatsResponse {
@@ -45,6 +54,10 @@ interface WakaTimeAllTimeResponse {
 interface WakaTimeGrandTotal {
     text?: string;
     total_seconds?: number;
+    ai_model_total_cost?: number;
+    ai_model_breakdown?: WakaTimeAiModel[];
+    ai_input_tokens?: number;
+    ai_output_tokens?: number;
 }
 
 interface WakaTimeSummariesDay {
@@ -62,7 +75,12 @@ interface WakaTimeSummariesResponse {
 }
 
 interface WakaTimeStatusBarResponse {
-    data?: { grand_total?: WakaTimeGrandTotal };
+    data?: {
+        grand_total?: WakaTimeGrandTotal;
+        languages?: WakaTimeStatItem[];
+        editors?: WakaTimeStatItem[];
+        categories?: WakaTimeStatItem[];
+    };
 }
 
 interface WakaTimeProject {
@@ -92,24 +110,28 @@ const BASE_URL = 'https://wakatime.com/api/v1/users/current';
 // --- Time windows -------------------------------------------------------
 // Each window maps to a free-tier stats/:range endpoint plus display labels.
 
-type WindowKey = 'last7' | 'last30' | 'allTime' | 'lastYear';
+type WindowKey = 'today' | 'last7' | 'last30' | 'allTime' | 'lastYear';
 
 interface WindowSpec {
     path: string;
     label: string;
+    // status_bar/today nests totals/AI under data.grand_total and omits best_day;
+    // stats/:range exposes them at the top level. Flag the shape so fetchWindow normalizes.
+    statusBar?: boolean;
 }
 
 const WINDOWS: Record<WindowKey, WindowSpec> = {
+    today: { path: '/status_bar/today', label: 'Today', statusBar: true },
     last7: { path: '/stats/last_7_days', label: 'Last 7 Days' },
     last30: { path: '/stats/last_30_days', label: 'Last 30 Days' },
     allTime: { path: '/stats/all_time', label: 'All Time' },
     lastYear: { path: '/stats/last_year', label: 'Last Year' },
 };
 
-type Facet = 'Total' | 'Languages' | 'Editors' | 'Categories' | 'BestDay';
+type Facet = 'Total' | 'Languages' | 'Editors' | 'Categories' | 'BestDay' | 'AiCost' | 'AiTokens';
 
-const FACETS: readonly Facet[] = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay'];
-const WINDOW_KEYS: readonly WindowKey[] = ['last7', 'last30', 'allTime', 'lastYear'];
+const FACETS: readonly Facet[] = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay', 'AiCost', 'AiTokens'];
+const WINDOW_KEYS: readonly WindowKey[] = ['today', 'last7', 'last30', 'allTime', 'lastYear'];
 
 type StandaloneKey = 'sinceToday' | 'summaries' | 'today' | 'projects' | 'leaders' | 'goals' | 'durations';
 
@@ -221,7 +243,25 @@ async function fetchWindow(
     window: WindowKey,
     fetchEndpoint: EndpointFetch,
 ): Promise<WakaTimeStatsData | undefined> {
-    return (await fetchEndpoint<WakaTimeStatsResponse>(WINDOWS[window].path))?.data;
+    const spec = WINDOWS[window];
+    if (!spec.statusBar) {
+        return (await fetchEndpoint<WakaTimeStatsResponse>(spec.path))?.data;
+    }
+    const data = (await fetchEndpoint<WakaTimeStatusBarResponse>(spec.path))?.data;
+    if (!data) {
+        return undefined;
+    }
+    const grand = data.grand_total ?? {};
+    return {
+        ...(grand.text !== undefined && { human_readable_total: grand.text }),
+        ...(data.languages !== undefined && { languages: data.languages }),
+        ...(data.editors !== undefined && { editors: data.editors }),
+        ...(data.categories !== undefined && { categories: data.categories }),
+        ...(grand.ai_model_total_cost !== undefined && { ai_model_total_cost: grand.ai_model_total_cost }),
+        ...(grand.ai_model_breakdown !== undefined && { ai_model_breakdown: grand.ai_model_breakdown }),
+        ...(grand.ai_input_tokens !== undefined && { ai_input_tokens: grand.ai_input_tokens }),
+        ...(grand.ai_output_tokens !== undefined && { ai_output_tokens: grand.ai_output_tokens }),
+    };
 }
 
 async function renderTotal(window: WindowKey, fetchEndpoint: EndpointFetch): Promise<string> {
@@ -264,6 +304,57 @@ async function renderBestDay(window: WindowKey, fetchEndpoint: EndpointFetch): P
     }
     const date = best.date ? ` on ${best.date}` : '';
     return `**${WINDOWS[window].label} Best Day:** ${best.text}${date}`;
+}
+
+function abbreviateCount(value: number): string {
+    if (value >= 1_000_000) {
+        return `${(value / 1_000_000).toFixed(1)}M`;
+    }
+    if (value >= 1_000) {
+        return `${(value / 1_000).toFixed(1)}K`;
+    }
+    return String(value);
+}
+
+async function renderAiCost(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const total = data?.ai_model_total_cost;
+    if (total === undefined || total <= 0) {
+        return '';
+    }
+    const header = `**${WINDOWS[window].label}: AI Cost**\n\n**Total:** $${total.toFixed(2)}`;
+    const models = (data?.ai_model_breakdown ?? [])
+        .filter((model): model is WakaTimeAiModel & { name: string; cost: number } =>
+            typeof model.name === 'string' && typeof model.cost === 'number' && model.cost > 0)
+        .sort((a, b) => b.cost - a.cost)
+        .slice(0, topN);
+    if (models.length === 0) {
+        return header;
+    }
+    const maxNameLength = Math.max(...models.map(model => model.name.length));
+    const lines = models.map(model => {
+        const name = model.name.padEnd(maxNameLength, ' ');
+        const bar = makeBar((model.cost / total) * 100);
+        return `${name}  ${bar}  $${model.cost.toFixed(2)}`;
+    });
+    return `${header}\n\n<pre>\n${lines.join('\n')}\n</pre>`;
+}
+
+async function renderAiTokens(window: WindowKey, fetchEndpoint: EndpointFetch): Promise<string> {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const input = data?.ai_input_tokens;
+    const output = data?.ai_output_tokens;
+    if ((input === undefined || input <= 0) && (output === undefined || output <= 0)) {
+        return '';
+    }
+    const parts: string[] = [];
+    if (input !== undefined && input > 0) {
+        parts.push(`**Input:** ${abbreviateCount(input)}`);
+    }
+    if (output !== undefined && output > 0) {
+        parts.push(`**Output:** ${abbreviateCount(output)}`);
+    }
+    return `**${WINDOWS[window].label}: AI Tokens**\n\n${parts.join(' • ')}`;
 }
 
 async function renderSinceToday(fetchEndpoint: EndpointFetch): Promise<string> {
@@ -388,6 +479,10 @@ function renderFacet(
             return renderCategories(window, fetchEndpoint, topN);
         case 'BestDay':
             return renderBestDay(window, fetchEndpoint);
+        case 'AiCost':
+            return renderAiCost(window, fetchEndpoint, topN);
+        case 'AiTokens':
+            return renderAiTokens(window, fetchEndpoint);
     }
 }
 
