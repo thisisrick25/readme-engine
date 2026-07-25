@@ -242,19 +242,19 @@ async function renderTotal(window: WindowKey, fetchEndpoint: EndpointFetch): Pro
 async function renderLanguages(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.languages ?? [], topN);
-    return block ? `#### ${WINDOWS[window].label} — Languages\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label}: Languages**\n\n${block}` : '';
 }
 
 async function renderEditors(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.editors ?? [], topN);
-    return block ? `#### ${WINDOWS[window].label} — Editors\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label}: Editors**\n\n${block}` : '';
 }
 
 async function renderCategories(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.categories ?? [], topN);
-    return block ? `#### ${WINDOWS[window].label} — Categories\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label}: Categories**\n\n${block}` : '';
 }
 
 async function renderBestDay(window: WindowKey, fetchEndpoint: EndpointFetch): Promise<string> {
@@ -299,8 +299,8 @@ async function renderSummaries(fetchEndpoint: EndpointFetch): Promise<string> {
     });
     const total = response?.cumulative_total?.text;
     const heading = total
-        ? `#### Last 7 Days — Activity\n\n**Total:** ${total}`
-        : '#### Last 7 Days — Activity';
+        ? `**Last 7 Days: Activity**\n\n**Total:** ${total}`
+        : '**Last 7 Days: Activity**';
     return `${heading}\n\n<pre>\n${lines.join('\n')}\n</pre>`;
 }
 
@@ -322,7 +322,7 @@ async function renderProjects(fetchEndpoint: EndpointFetch, topN: number): Promi
         return '';
     }
     const list = names.map(name => `- ${name}`).join('\n');
-    return `#### Recent Projects\n\n${list}`;
+    return `**Recent Projects**\n\n${list}`;
 }
 
 async function renderLeaders(fetchEndpoint: EndpointFetch): Promise<string> {
