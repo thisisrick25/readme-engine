@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.14.0](https://github.com/thisisrick25/readme-engine/compare/v2.13.1...v2.14.0) (2026-07-25)
+
+
+### Features
+
+* **wakatime:** use bold colon labels for bar chart sections ([#53](https://github.com/thisisrick25/readme-engine/issues/53)) ([f64e5b3](https://github.com/thisisrick25/readme-engine/commit/f64e5b36d51412548c69074b75979ff8b6549f5e))
+
 ## [2.13.1](https://github.com/thisisrick25/readme-engine/compare/v2.13.0...v2.13.1) (2026-07-25)
 
 
