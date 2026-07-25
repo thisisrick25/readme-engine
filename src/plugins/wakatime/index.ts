@@ -40,6 +40,52 @@ interface WakaTimeAllTimeResponse {
     data?: WakaTimeAllTimeData;
 }
 
+// --- Standalone endpoint shapes (distinct from stats/:range) -------------
+
+interface WakaTimeGrandTotal {
+    text?: string;
+    total_seconds?: number;
+}
+
+interface WakaTimeSummariesDay {
+    grand_total?: WakaTimeGrandTotal;
+    range?: { date?: string };
+}
+
+interface WakaTimeCumulativeTotal {
+    text?: string;
+}
+
+interface WakaTimeSummariesResponse {
+    data?: WakaTimeSummariesDay[];
+    cumulative_total?: WakaTimeCumulativeTotal;
+}
+
+interface WakaTimeStatusBarResponse {
+    data?: { grand_total?: WakaTimeGrandTotal };
+}
+
+interface WakaTimeProject {
+    name?: string;
+}
+
+interface WakaTimeProjectsResponse {
+    data?: WakaTimeProject[];
+    total?: number;
+}
+
+interface WakaTimeGoalsResponse {
+    total?: number;
+}
+
+interface WakaTimeLeadersResponse {
+    current_user?: { rank?: number };
+}
+
+interface WakaTimeDurationsResponse {
+    data?: { duration?: number }[];
+}
+
 const BAR_LENGTH = 20;
 const BASE_URL = 'https://wakatime.com/api/v1/users/current';
 
@@ -65,11 +111,23 @@ type Facet = 'Total' | 'Languages' | 'Editors' | 'Categories' | 'BestDay';
 const FACETS: readonly Facet[] = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay'];
 const WINDOW_KEYS: readonly WindowKey[] = ['last7', 'last30', 'allTime', 'lastYear'];
 
-type SectionKey = `${WindowKey}${Facet}` | 'sinceToday';
+type StandaloneKey = 'sinceToday' | 'summaries' | 'today' | 'projects' | 'leaders' | 'goals' | 'durations';
+
+type SectionKey = `${WindowKey}${Facet}` | StandaloneKey;
+
+const STANDALONE_KEYS: readonly StandaloneKey[] = [
+    'sinceToday',
+    'summaries',
+    'today',
+    'projects',
+    'leaders',
+    'goals',
+    'durations',
+];
 
 const VALID_SECTIONS: readonly SectionKey[] = [
     ...WINDOW_KEYS.flatMap(w => FACETS.map(f => `${w}${f}` as SectionKey)),
-    'sinceToday',
+    ...STANDALONE_KEYS,
 ];
 const DEFAULT_SECTIONS: readonly SectionKey[] = ['last30Languages'];
 
@@ -111,7 +169,8 @@ function aiManualAnnotation(item: WakaTimeStatItem): string {
 
 async function fetchJson<T>(path: string, authHeader: string): Promise<T | null> {
     try {
-        const response = await fetch(`${BASE_URL}${path}`, {
+        const url = path.startsWith('http') ? path : `${BASE_URL}${path}`;
+        const response = await fetch(url, {
             headers: { Authorization: authHeader },
         });
         if (!response.ok) {
@@ -216,6 +275,102 @@ async function renderSinceToday(fetchEndpoint: EndpointFetch): Promise<string> {
     return `**All-Time Total:** ${data.text}${since}`;
 }
 
+function isoDate(offsetDays: number): string {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + offsetDays);
+    return d.toISOString().slice(0, 10);
+}
+
+async function renderSummaries(fetchEndpoint: EndpointFetch): Promise<string> {
+    const response = await fetchEndpoint<WakaTimeSummariesResponse>(
+        `/summaries?start=${isoDate(-6)}&end=${isoDate(0)}`,
+    );
+    const days = response?.data ?? [];
+    if (days.length === 0) {
+        return '';
+    }
+    const maxSeconds = Math.max(...days.map(day => day.grand_total?.total_seconds ?? 0), 0);
+    const lines = days.map(day => {
+        const seconds = day.grand_total?.total_seconds ?? 0;
+        const percent = maxSeconds > 0 ? (seconds / maxSeconds) * 100 : 0;
+        const label = (day.range?.date ?? '').padEnd(10, ' ');
+        const text = day.grand_total?.text ?? '0 secs';
+        return `${label}  ${makeBar(percent)}  ${text}`;
+    });
+    const total = response?.cumulative_total?.text;
+    const heading = total
+        ? `#### Last 7 Days — Activity\n\n**Total:** ${total}`
+        : '#### Last 7 Days — Activity';
+    return `${heading}\n\n<pre>\n${lines.join('\n')}\n</pre>`;
+}
+
+async function renderToday(fetchEndpoint: EndpointFetch): Promise<string> {
+    const total = (await fetchEndpoint<WakaTimeStatusBarResponse>('/status_bar/today'))?.data?.grand_total;
+    if (!total?.text) {
+        return '';
+    }
+    return `**Today:** ${total.text}`;
+}
+
+async function renderProjects(fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
+    const response = await fetchEndpoint<WakaTimeProjectsResponse>('/projects');
+    const names = (response?.data ?? [])
+        .map(project => project.name)
+        .filter((name): name is string => Boolean(name))
+        .slice(0, topN);
+    if (names.length === 0) {
+        return '';
+    }
+    const list = names.map(name => `- ${name}`).join('\n');
+    return `#### Recent Projects\n\n${list}`;
+}
+
+async function renderLeaders(fetchEndpoint: EndpointFetch): Promise<string> {
+    const rank = (await fetchEndpoint<WakaTimeLeadersResponse>('https://wakatime.com/api/v1/leaders'))?.current_user?.rank;
+    if (typeof rank !== 'number') {
+        return '';
+    }
+    return `**Global Rank:** #${rank.toLocaleString('en-US')}`;
+}
+
+async function renderGoals(fetchEndpoint: EndpointFetch): Promise<string> {
+    const total = (await fetchEndpoint<WakaTimeGoalsResponse>('/goals'))?.total;
+    if (!total || total <= 0) {
+        return '';
+    }
+    return `**Active Goals:** ${total}`;
+}
+
+async function renderDurations(fetchEndpoint: EndpointFetch): Promise<string> {
+    const blocks = (await fetchEndpoint<WakaTimeDurationsResponse>(`/durations?date=${isoDate(0)}`))?.data ?? [];
+    if (blocks.length === 0) {
+        return '';
+    }
+    const seconds = blocks.reduce((sum, block) => sum + (block.duration ?? 0), 0);
+    const minutes = Math.round(seconds / 60);
+    const label = minutes >= 60 ? `${Math.floor(minutes / 60)} hrs ${minutes % 60} mins` : `${minutes} mins`;
+    return `**Today's Sessions:** ${blocks.length} (${label})`;
+}
+
+function renderStandalone(key: StandaloneKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
+    switch (key) {
+        case 'sinceToday':
+            return renderSinceToday(fetchEndpoint);
+        case 'summaries':
+            return renderSummaries(fetchEndpoint);
+        case 'today':
+            return renderToday(fetchEndpoint);
+        case 'projects':
+            return renderProjects(fetchEndpoint, topN);
+        case 'leaders':
+            return renderLeaders(fetchEndpoint);
+        case 'goals':
+            return renderGoals(fetchEndpoint);
+        case 'durations':
+            return renderDurations(fetchEndpoint);
+    }
+}
+
 function renderFacet(
     window: WindowKey,
     facet: Facet,
@@ -237,8 +392,8 @@ function renderFacet(
 }
 
 async function renderSection(key: SectionKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
-    if (key === 'sinceToday') {
-        return renderSinceToday(fetchEndpoint);
+    if ((STANDALONE_KEYS as readonly string[]).includes(key)) {
+        return renderStandalone(key as StandaloneKey, fetchEndpoint, topN);
     }
     for (const window of WINDOW_KEYS) {
         for (const facet of FACETS) {

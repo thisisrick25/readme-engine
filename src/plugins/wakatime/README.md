@@ -23,11 +23,17 @@ Each section key is a **time window** (`last7`, `last30`, `allTime`, `lastYear`)
 | `Categories` | Top activity categories (e.g. AI Coding, Writing Docs) with percentages.   |
 | `BestDay`    | The single most productive day in the window.                              |
 
-**Standalone key:**
+**Standalone keys:**
 
-| Section key  | Renders                                                            | Endpoint               |
-| ------------ | ----------------------------------------------------------------- | ---------------------- |
-| `sinceToday` | **All-Time Total** — a single lifetime total coding time headline. | `all_time_since_today` |
+| Section key  | Renders                                                                        | Endpoint               |
+| ------------ | ----------------------------------------------------------------------------- | ---------------------- |
+| `sinceToday` | **All-Time Total** — a single lifetime total coding time headline.             | `all_time_since_today` |
+| `summaries`  | **Last 7 Days — Activity** — a per-day bar chart plus the weekly total.        | `summaries`            |
+| `today`      | **Today** — today's total coding time as a single line.                        | `status_bar/today`     |
+| `projects`   | **Recent Projects** — a list of your most recently active projects.            | `projects`             |
+| `leaders`    | **Global Rank** — your position on the public WakaTime leaderboard.            | `leaders`              |
+| `goals`      | **Active Goals** — the count of configured goals (omitted when you have none). | `goals`                |
+| `durations`  | **Today's Sessions** — count and total duration of today's coding sessions.    | `durations`            |
 
 > Each facet is an independent section key. Keys sharing an endpoint (for example `last30Total`, `last30Languages`, `last30Editors` all read `stats/last_30_days`) reuse a single request per run.
 >
@@ -132,7 +138,7 @@ Configure which sections to display via the `wakatime.sections` key in `PLUGIN_C
     PLUGIN_CONFIG: |
       {
         "wakatime": {
-          "sections": ["last30Total", "last30Languages", "last30Editors", "last30Categories", "last30BestDay", "lastYearLanguages", "sinceToday"]
+          "sections": ["today", "last7Total", "last30Total", "sinceToday", "summaries", "last30Languages", "last30Editors", "last30Categories", "last30BestDay", "lastYearLanguages", "projects", "leaders"]
         }
       }
 ```
