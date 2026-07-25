@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.0](https://github.com/thisisrick25/readme-engine/compare/v2.12.0...v2.13.0) (2026-07-25)
+
+
+### Features
+
+* **wakatime:** use bold inline labels for total and best-day text outputs ([#47](https://github.com/thisisrick25/readme-engine/issues/47)) ([e9febac](https://github.com/thisisrick25/readme-engine/commit/e9febaca7f41303a7b428182474978fd039d40b2))
+
 ## [2.12.0](https://github.com/thisisrick25/readme-engine/compare/v2.11.0...v2.12.0) (2026-07-25)
 
 
