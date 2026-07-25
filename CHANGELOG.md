@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.1](https://github.com/thisisrick25/readme-engine/compare/v2.13.0...v2.13.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* **wakatime:** standardize colon labels for text outputs ([#50](https://github.com/thisisrick25/readme-engine/issues/50)) ([9499b21](https://github.com/thisisrick25/readme-engine/commit/9499b216979b9eb6b54f959ff4890c231528bfef))
+
 ## [2.13.0](https://github.com/thisisrick25/readme-engine/compare/v2.12.0...v2.13.0) (2026-07-25)
 
 
