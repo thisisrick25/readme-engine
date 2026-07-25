@@ -31752,13 +31752,14 @@ const prsPlugin = async (octokit, username, config) => {
 const BAR_LENGTH = 20;
 const BASE_URL = 'https://wakatime.com/api/v1/users/current';
 const WINDOWS = {
+    today: { path: '/status_bar/today', label: 'Today', statusBar: true },
     last7: { path: '/stats/last_7_days', label: 'Last 7 Days' },
     last30: { path: '/stats/last_30_days', label: 'Last 30 Days' },
     allTime: { path: '/stats/all_time', label: 'All Time' },
     lastYear: { path: '/stats/last_year', label: 'Last Year' },
 };
-const FACETS = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay'];
-const WINDOW_KEYS = ['last7', 'last30', 'allTime', 'lastYear'];
+const FACETS = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay', 'AiCost', 'AiTokens'];
+const WINDOW_KEYS = ['today', 'last7', 'last30', 'allTime', 'lastYear'];
 const STANDALONE_KEYS = [
     'sinceToday',
     'summaries',
@@ -31853,7 +31854,25 @@ function renderStatItems(items, topN) {
     return `<pre>\n${lines.join('\n')}\n</pre>`;
 }
 async function fetchWindow(window, fetchEndpoint) {
-    return (await fetchEndpoint(WINDOWS[window].path))?.data;
+    const spec = WINDOWS[window];
+    if (!spec.statusBar) {
+        return (await fetchEndpoint(spec.path))?.data;
+    }
+    const data = (await fetchEndpoint(spec.path))?.data;
+    if (!data) {
+        return undefined;
+    }
+    const grand = data.grand_total ?? {};
+    return {
+        ...(grand.text !== undefined && { human_readable_total: grand.text }),
+        ...(data.languages !== undefined && { languages: data.languages }),
+        ...(data.editors !== undefined && { editors: data.editors }),
+        ...(data.categories !== undefined && { categories: data.categories }),
+        ...(grand.ai_model_total_cost !== undefined && { ai_model_total_cost: grand.ai_model_total_cost }),
+        ...(grand.ai_model_breakdown !== undefined && { ai_model_breakdown: grand.ai_model_breakdown }),
+        ...(grand.ai_input_tokens !== undefined && { ai_input_tokens: grand.ai_input_tokens }),
+        ...(grand.ai_output_tokens !== undefined && { ai_output_tokens: grand.ai_output_tokens }),
+    };
 }
 async function renderTotal(window, fetchEndpoint) {
     const data = await fetchWindow(window, fetchEndpoint);
@@ -31891,6 +31910,53 @@ async function renderBestDay(window, fetchEndpoint) {
     }
     const date = best.date ? ` on ${best.date}` : '';
     return `**${WINDOWS[window].label} Best Day:** ${best.text}${date}`;
+}
+function abbreviateCount(value) {
+    if (value >= 1_000_000) {
+        return `${(value / 1_000_000).toFixed(1)}M`;
+    }
+    if (value >= 1_000) {
+        return `${(value / 1_000).toFixed(1)}K`;
+    }
+    return String(value);
+}
+async function renderAiCost(window, fetchEndpoint, topN) {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const total = data?.ai_model_total_cost;
+    if (total === undefined || total <= 0) {
+        return '';
+    }
+    const header = `**${WINDOWS[window].label}: AI Cost**\n\n**Total:** $${total.toFixed(2)}`;
+    const models = (data?.ai_model_breakdown ?? [])
+        .filter((model) => typeof model.name === 'string' && typeof model.cost === 'number' && model.cost > 0)
+        .sort((a, b) => b.cost - a.cost)
+        .slice(0, topN);
+    if (models.length === 0) {
+        return header;
+    }
+    const maxNameLength = Math.max(...models.map(model => model.name.length));
+    const lines = models.map(model => {
+        const name = model.name.padEnd(maxNameLength, ' ');
+        const bar = makeBar((model.cost / total) * 100);
+        return `${name}  ${bar}  $${model.cost.toFixed(2)}`;
+    });
+    return `${header}\n\n<pre>\n${lines.join('\n')}\n</pre>`;
+}
+async function renderAiTokens(window, fetchEndpoint) {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const input = data?.ai_input_tokens;
+    const output = data?.ai_output_tokens;
+    if ((input === undefined || input <= 0) && (output === undefined || output <= 0)) {
+        return '';
+    }
+    const parts = [];
+    if (input !== undefined && input > 0) {
+        parts.push(`**Input:** ${abbreviateCount(input)}`);
+    }
+    if (output !== undefined && output > 0) {
+        parts.push(`**Output:** ${abbreviateCount(output)}`);
+    }
+    return `**${WINDOWS[window].label}: AI Tokens**\n\n${parts.join(' • ')}`;
 }
 async function renderSinceToday(fetchEndpoint) {
     const data = (await fetchEndpoint('/all_time_since_today'))?.data;
@@ -31998,6 +32064,10 @@ function renderFacet(window, facet, fetchEndpoint, topN) {
             return renderCategories(window, fetchEndpoint, topN);
         case 'BestDay':
             return renderBestDay(window, fetchEndpoint);
+        case 'AiCost':
+            return renderAiCost(window, fetchEndpoint, topN);
+        case 'AiTokens':
+            return renderAiTokens(window, fetchEndpoint);
     }
 }
 async function renderSection(key, fetchEndpoint, topN) {
