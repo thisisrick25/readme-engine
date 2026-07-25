@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.0](https://github.com/thisisrick25/readme-engine/compare/v2.14.0...v2.15.0) (2026-07-25)
+
+
+### Features
+
+* **wakatime:** add today window and AI cost and tokens facets ([#56](https://github.com/thisisrick25/readme-engine/issues/56)) ([49b721b](https://github.com/thisisrick25/readme-engine/commit/49b721b4d32fb116eed85be7b80705b5bfbc6f7b))
+
 ## [2.14.0](https://github.com/thisisrick25/readme-engine/compare/v2.13.1...v2.14.0) (2026-07-25)
 
 
