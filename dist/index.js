@@ -31862,12 +31862,12 @@ async function renderTotal(window, fetchEndpoint) {
     }
     const summary = [];
     if (data.human_readable_total) {
-        summary.push(`**Total:** ${data.human_readable_total}`);
+        summary.push(`Total: ${data.human_readable_total}`);
     }
     if (data.human_readable_daily_average) {
-        summary.push(`**Daily average:** ${data.human_readable_daily_average}`);
+        summary.push(`Daily average: ${data.human_readable_daily_average}`);
     }
-    return summary.length > 0 ? `#### ${WINDOWS[window].label}\n\n${summary.join(' • ')}` : '';
+    return summary.length > 0 ? `**${WINDOWS[window].label}** — ${summary.join(' • ')}` : '';
 }
 async function renderLanguages(window, fetchEndpoint, topN) {
     const data = await fetchWindow(window, fetchEndpoint);
@@ -31890,7 +31890,7 @@ async function renderBestDay(window, fetchEndpoint) {
         return '';
     }
     const date = best.date ? ` on ${best.date}` : '';
-    return `#### ${WINDOWS[window].label} — Best Day\n\n**${best.text}**${date}`;
+    return `**${WINDOWS[window].label} Best Day** — ${best.text}${date}`;
 }
 async function renderSinceToday(fetchEndpoint) {
     const data = (await fetchEndpoint('/all_time_since_today'))?.data;
