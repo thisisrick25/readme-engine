@@ -231,12 +231,12 @@ async function renderTotal(window: WindowKey, fetchEndpoint: EndpointFetch): Pro
     }
     const summary: string[] = [];
     if (data.human_readable_total) {
-        summary.push(`Total: ${data.human_readable_total}`);
+        summary.push(`${data.human_readable_total} total`);
     }
     if (data.human_readable_daily_average) {
-        summary.push(`Daily average: ${data.human_readable_daily_average}`);
+        summary.push(`${data.human_readable_daily_average}/day`);
     }
-    return summary.length > 0 ? `**${WINDOWS[window].label}** — ${summary.join(' • ')}` : '';
+    return summary.length > 0 ? `**${WINDOWS[window].label}:** ${summary.join(' • ')}` : '';
 }
 
 async function renderLanguages(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
@@ -263,7 +263,7 @@ async function renderBestDay(window: WindowKey, fetchEndpoint: EndpointFetch): P
         return '';
     }
     const date = best.date ? ` on ${best.date}` : '';
-    return `**${WINDOWS[window].label} Best Day** — ${best.text}${date}`;
+    return `**${WINDOWS[window].label} Best Day:** ${best.text}${date}`;
 }
 
 async function renderSinceToday(fetchEndpoint: EndpointFetch): Promise<string> {
