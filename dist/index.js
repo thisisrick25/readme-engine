@@ -31759,9 +31759,18 @@ const WINDOWS = {
 };
 const FACETS = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay'];
 const WINDOW_KEYS = ['last7', 'last30', 'allTime', 'lastYear'];
+const STANDALONE_KEYS = [
+    'sinceToday',
+    'summaries',
+    'today',
+    'projects',
+    'leaders',
+    'goals',
+    'durations',
+];
 const VALID_SECTIONS = [
     ...WINDOW_KEYS.flatMap(w => FACETS.map(f => `${w}${f}`)),
-    'sinceToday',
+    ...STANDALONE_KEYS,
 ];
 const DEFAULT_SECTIONS = ['last30Languages'];
 function parseSections(config) {
@@ -31799,7 +31808,8 @@ function aiManualAnnotation(item) {
 }
 async function fetchJson(path, authHeader) {
     try {
-        const response = await fetch(`${BASE_URL}${path}`, {
+        const url = path.startsWith('http') ? path : `${BASE_URL}${path}`;
+        const response = await fetch(url, {
             headers: { Authorization: authHeader },
         });
         if (!response.ok) {
@@ -31890,6 +31900,92 @@ async function renderSinceToday(fetchEndpoint) {
     const since = data.range?.start_text ? ` (since ${data.range.start_text})` : '';
     return `**All-Time Total:** ${data.text}${since}`;
 }
+function isoDate(offsetDays) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + offsetDays);
+    return d.toISOString().slice(0, 10);
+}
+async function renderSummaries(fetchEndpoint) {
+    const response = await fetchEndpoint(`/summaries?start=${isoDate(-6)}&end=${isoDate(0)}`);
+    const days = response?.data ?? [];
+    if (days.length === 0) {
+        return '';
+    }
+    const maxSeconds = Math.max(...days.map(day => day.grand_total?.total_seconds ?? 0), 0);
+    const lines = days.map(day => {
+        const seconds = day.grand_total?.total_seconds ?? 0;
+        const percent = maxSeconds > 0 ? (seconds / maxSeconds) * 100 : 0;
+        const label = (day.range?.date ?? '').padEnd(10, ' ');
+        const text = day.grand_total?.text ?? '0 secs';
+        return `${label}  ${makeBar(percent)}  ${text}`;
+    });
+    const total = response?.cumulative_total?.text;
+    const heading = total
+        ? `#### Last 7 Days — Activity\n\n**Total:** ${total}`
+        : '#### Last 7 Days — Activity';
+    return `${heading}\n\n<pre>\n${lines.join('\n')}\n</pre>`;
+}
+async function renderToday(fetchEndpoint) {
+    const total = (await fetchEndpoint('/status_bar/today'))?.data?.grand_total;
+    if (!total?.text) {
+        return '';
+    }
+    return `**Today:** ${total.text}`;
+}
+async function renderProjects(fetchEndpoint, topN) {
+    const response = await fetchEndpoint('/projects');
+    const names = (response?.data ?? [])
+        .map(project => project.name)
+        .filter((name) => Boolean(name))
+        .slice(0, topN);
+    if (names.length === 0) {
+        return '';
+    }
+    const list = names.map(name => `- ${name}`).join('\n');
+    return `#### Recent Projects\n\n${list}`;
+}
+async function renderLeaders(fetchEndpoint) {
+    const rank = (await fetchEndpoint('https://wakatime.com/api/v1/leaders'))?.current_user?.rank;
+    if (typeof rank !== 'number') {
+        return '';
+    }
+    return `**Global Rank:** #${rank.toLocaleString('en-US')}`;
+}
+async function renderGoals(fetchEndpoint) {
+    const total = (await fetchEndpoint('/goals'))?.total;
+    if (!total || total <= 0) {
+        return '';
+    }
+    return `**Active Goals:** ${total}`;
+}
+async function renderDurations(fetchEndpoint) {
+    const blocks = (await fetchEndpoint(`/durations?date=${isoDate(0)}`))?.data ?? [];
+    if (blocks.length === 0) {
+        return '';
+    }
+    const seconds = blocks.reduce((sum, block) => sum + (block.duration ?? 0), 0);
+    const minutes = Math.round(seconds / 60);
+    const label = minutes >= 60 ? `${Math.floor(minutes / 60)} hrs ${minutes % 60} mins` : `${minutes} mins`;
+    return `**Today's Sessions:** ${blocks.length} (${label})`;
+}
+function renderStandalone(key, fetchEndpoint, topN) {
+    switch (key) {
+        case 'sinceToday':
+            return renderSinceToday(fetchEndpoint);
+        case 'summaries':
+            return renderSummaries(fetchEndpoint);
+        case 'today':
+            return renderToday(fetchEndpoint);
+        case 'projects':
+            return renderProjects(fetchEndpoint, topN);
+        case 'leaders':
+            return renderLeaders(fetchEndpoint);
+        case 'goals':
+            return renderGoals(fetchEndpoint);
+        case 'durations':
+            return renderDurations(fetchEndpoint);
+    }
+}
 function renderFacet(window, facet, fetchEndpoint, topN) {
     switch (facet) {
         case 'Total':
@@ -31905,8 +32001,8 @@ function renderFacet(window, facet, fetchEndpoint, topN) {
     }
 }
 async function renderSection(key, fetchEndpoint, topN) {
-    if (key === 'sinceToday') {
-        return renderSinceToday(fetchEndpoint);
+    if (STANDALONE_KEYS.includes(key)) {
+        return renderStandalone(key, fetchEndpoint, topN);
     }
     for (const window of WINDOW_KEYS) {
         for (const facet of FACETS) {
