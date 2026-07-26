@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.1](https://github.com/thisisrick25/readme-engine/compare/v2.15.0...v2.15.1) (2026-07-26)
+
+
+### Bug Fixes
+
+* **wakatime:** one-line AI tokens and colon-suffix section headings ([#59](https://github.com/thisisrick25/readme-engine/issues/59)) ([243e81a](https://github.com/thisisrick25/readme-engine/commit/243e81ae79acdec4cf4bb803754a2ea94eba266d))
+
 ## [2.15.0](https://github.com/thisisrick25/readme-engine/compare/v2.14.0...v2.15.0) (2026-07-25)
 
 
