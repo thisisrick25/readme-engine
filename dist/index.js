@@ -31891,17 +31891,17 @@ async function renderTotal(window, fetchEndpoint) {
 async function renderLanguages(window, fetchEndpoint, topN) {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.languages ?? [], topN);
-    return block ? `**${WINDOWS[window].label}: Languages**\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label} Languages:**\n\n${block}` : '';
 }
 async function renderEditors(window, fetchEndpoint, topN) {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.editors ?? [], topN);
-    return block ? `**${WINDOWS[window].label}: Editors**\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label} Editors:**\n\n${block}` : '';
 }
 async function renderCategories(window, fetchEndpoint, topN) {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.categories ?? [], topN);
-    return block ? `**${WINDOWS[window].label}: Categories**\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label} Categories:**\n\n${block}` : '';
 }
 async function renderBestDay(window, fetchEndpoint) {
     const best = (await fetchWindow(window, fetchEndpoint))?.best_day;
@@ -31926,7 +31926,7 @@ async function renderAiCost(window, fetchEndpoint, topN) {
     if (total === undefined || total <= 0) {
         return '';
     }
-    const header = `**${WINDOWS[window].label}: AI Cost**\n\n**Total:** $${total.toFixed(2)}`;
+    const header = `**${WINDOWS[window].label} AI Cost:**\n\n**Total:** $${total.toFixed(2)}`;
     const models = (data?.ai_model_breakdown ?? [])
         .filter((model) => typeof model.name === 'string' && typeof model.cost === 'number' && model.cost > 0)
         .sort((a, b) => b.cost - a.cost)
@@ -31951,12 +31951,12 @@ async function renderAiTokens(window, fetchEndpoint) {
     }
     const parts = [];
     if (input !== undefined && input > 0) {
-        parts.push(`**Input:** ${abbreviateCount(input)}`);
+        parts.push(`${abbreviateCount(input)} in`);
     }
     if (output !== undefined && output > 0) {
-        parts.push(`**Output:** ${abbreviateCount(output)}`);
+        parts.push(`${abbreviateCount(output)} out`);
     }
-    return `**${WINDOWS[window].label}: AI Tokens**\n\n${parts.join(' • ')}`;
+    return `**${WINDOWS[window].label} AI Tokens:** ${parts.join(' • ')}`;
 }
 async function renderSinceToday(fetchEndpoint) {
     const data = (await fetchEndpoint('/all_time_since_today'))?.data;
