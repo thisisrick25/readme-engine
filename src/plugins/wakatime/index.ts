@@ -32,6 +32,11 @@ interface WakaTimeStatsData {
     ai_model_breakdown?: WakaTimeAiModel[];
     ai_input_tokens?: number;
     ai_output_tokens?: number;
+    ai_additions?: number;
+    ai_deletions?: number;
+    human_additions?: number;
+    human_deletions?: number;
+    ai_model_line_changes?: Record<string, number>;
 }
 
 interface WakaTimeStatsResponse {
@@ -58,6 +63,11 @@ interface WakaTimeGrandTotal {
     ai_model_breakdown?: WakaTimeAiModel[];
     ai_input_tokens?: number;
     ai_output_tokens?: number;
+    ai_additions?: number;
+    ai_deletions?: number;
+    human_additions?: number;
+    human_deletions?: number;
+    ai_model_line_changes?: Record<string, number>;
 }
 
 interface WakaTimeSummariesDay {
@@ -128,9 +138,30 @@ const WINDOWS: Record<WindowKey, WindowSpec> = {
     lastYear: { path: '/stats/last_year', label: 'Last Year' },
 };
 
-type Facet = 'Total' | 'Languages' | 'Editors' | 'Categories' | 'BestDay' | 'AiCost' | 'AiTokens';
+type Facet =
+    | 'Total'
+    | 'Languages'
+    | 'Editors'
+    | 'Categories'
+    | 'BestDay'
+    | 'AiCost'
+    | 'AiTokens'
+    | 'AiChanges'
+    | 'AiModels'
+    | 'AiRatio';
 
-const FACETS: readonly Facet[] = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay', 'AiCost', 'AiTokens'];
+const FACETS: readonly Facet[] = [
+    'Total',
+    'Languages',
+    'Editors',
+    'Categories',
+    'BestDay',
+    'AiCost',
+    'AiTokens',
+    'AiChanges',
+    'AiModels',
+    'AiRatio',
+];
 const WINDOW_KEYS: readonly WindowKey[] = ['today', 'last7', 'last30', 'allTime', 'lastYear'];
 
 type StandaloneKey = 'sinceToday' | 'summaries' | 'today' | 'projects' | 'leaders' | 'goals' | 'durations';
@@ -261,6 +292,11 @@ async function fetchWindow(
         ...(grand.ai_model_breakdown !== undefined && { ai_model_breakdown: grand.ai_model_breakdown }),
         ...(grand.ai_input_tokens !== undefined && { ai_input_tokens: grand.ai_input_tokens }),
         ...(grand.ai_output_tokens !== undefined && { ai_output_tokens: grand.ai_output_tokens }),
+        ...(grand.ai_additions !== undefined && { ai_additions: grand.ai_additions }),
+        ...(grand.ai_deletions !== undefined && { ai_deletions: grand.ai_deletions }),
+        ...(grand.human_additions !== undefined && { human_additions: grand.human_additions }),
+        ...(grand.human_deletions !== undefined && { human_deletions: grand.human_deletions }),
+        ...(grand.ai_model_line_changes !== undefined && { ai_model_line_changes: grand.ai_model_line_changes }),
     };
 }
 
@@ -355,6 +391,50 @@ async function renderAiTokens(window: WindowKey, fetchEndpoint: EndpointFetch): 
         parts.push(`${abbreviateCount(output)} out`);
     }
     return `**${WINDOWS[window].label} AI Tokens:** ${parts.join(' • ')}`;
+}
+
+async function renderAiChanges(window: WindowKey, fetchEndpoint: EndpointFetch): Promise<string> {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const aiAdd = data?.ai_additions ?? 0;
+    const aiDel = data?.ai_deletions ?? 0;
+    const humanAdd = data?.human_additions ?? 0;
+    const humanDel = data?.human_deletions ?? 0;
+    if (aiAdd + aiDel + humanAdd + humanDel <= 0) {
+        return '';
+    }
+    const ai = `+${abbreviateCount(aiAdd)} / -${abbreviateCount(aiDel)} AI`;
+    const human = `+${abbreviateCount(humanAdd)} / -${abbreviateCount(humanDel)} human`;
+    return `**${WINDOWS[window].label} AI Changes:** ${ai} • ${human}`;
+}
+
+async function renderAiModels(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const models = Object.entries(data?.ai_model_line_changes ?? {})
+        .filter(([, count]) => count > 0)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, topN);
+    if (models.length === 0) {
+        return '';
+    }
+    const maxCount = Math.max(...models.map(([, count]) => count));
+    const maxNameLength = Math.max(...models.map(([name]) => name.length));
+    const lines = models.map(([name, count]) => {
+        const percent = maxCount > 0 ? (count / maxCount) * 100 : 0;
+        return `${name.padEnd(maxNameLength, ' ')}  ${makeBar(percent)}  ${abbreviateCount(count)}`;
+    });
+    return `**${WINDOWS[window].label} AI Models:**\n\n<pre>\n${lines.join('\n')}\n</pre>`;
+}
+
+async function renderAiRatio(window: WindowKey, fetchEndpoint: EndpointFetch): Promise<string> {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const aiTotal = (data?.ai_additions ?? 0) + (data?.ai_deletions ?? 0);
+    const humanTotal = (data?.human_additions ?? 0) + (data?.human_deletions ?? 0);
+    const grand = aiTotal + humanTotal;
+    if (grand <= 0) {
+        return '';
+    }
+    const aiPct = Math.round((aiTotal / grand) * 100);
+    return `**${WINDOWS[window].label} AI vs Human:** ${aiPct}% AI • ${100 - aiPct}% human`;
 }
 
 async function renderSinceToday(fetchEndpoint: EndpointFetch): Promise<string> {
@@ -483,6 +563,12 @@ function renderFacet(
             return renderAiCost(window, fetchEndpoint, topN);
         case 'AiTokens':
             return renderAiTokens(window, fetchEndpoint);
+        case 'AiChanges':
+            return renderAiChanges(window, fetchEndpoint);
+        case 'AiModels':
+            return renderAiModels(window, fetchEndpoint, topN);
+        case 'AiRatio':
+            return renderAiRatio(window, fetchEndpoint);
     }
 }
 
