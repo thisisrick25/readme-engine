@@ -2,7 +2,7 @@
 
 This plugin fetches and displays your coding activity from [WakaTime](https://wakatime.com). You choose which sections to render via the `sections` config option, and **each selected section is emitted under its own marker** so you can place sections anywhere in your README — including side by side inside an HTML table.
 
-Each section key is a **time window** (`today`, `last7`, `last30`, `allTime`, `lastYear`) combined with a **facet** (`Total`, `Languages`, `Editors`, `Categories`, `BestDay`, `AiCost`, `AiTokens`), giving keys like `last30Languages` or `todayAiCost`. There is also a standalone `sinceToday` key. Every window reads a free-tier endpoint.
+Each section key is a **time window** (`today`, `last7`, `last30`, `allTime`, `lastYear`) combined with a **facet** (`Total`, `Languages`, `Editors`, `Categories`, `BestDay`, `AiCost`, `AiTokens`, `AiChanges`, `AiModels`, `AiRatio`), giving keys like `last30Languages` or `todayAiCost`. There is also a standalone `sinceToday` key. Every window reads a free-tier endpoint.
 
 **Windows:**
 
@@ -25,6 +25,9 @@ Each section key is a **time window** (`today`, `last7`, `last30`, `allTime`, `l
 | `BestDay`    | The single most productive day in the window.                              |
 | `AiCost`     | Total AI model spend plus a per-model cost breakdown with bars.            |
 | `AiTokens`   | AI input and output token counts (abbreviated, e.g. `4.2M`).               |
+| `AiChanges`  | AI vs. human line changes (additions and deletions), abbreviated.          |
+| `AiModels`   | Per-model line changes with bars (e.g. Opus, GPT, Sonnet).                 |
+| `AiRatio`    | Overall AI vs. human split as a percentage of line changes.               |
 
 > The `today` window omits `Total`'s daily-average line and has no `BestDay` (a single day); those render nothing.
 
@@ -124,6 +127,31 @@ Python      █████░░░░░░░░░░░░░░░░   24
 <!-- WAKATIME_SINCETODAY:START -->
 **All-Time Total:** 2,264 hrs 20 mins (since Thu Sep 3rd 2020)
 <!-- WAKATIME_SINCETODAY:END -->
+```
+
+The AI-change facets render like this. `last30AiChanges`:
+
+```markdown
+**Last 30 Days AI Changes:** +21.8K / -1.3K AI • +8.6K / -7.6K human
+```
+
+`last30AiRatio`:
+
+```markdown
+**Last 30 Days AI vs Human:** 72% AI • 28% human
+```
+
+`last30AiModels`:
+
+```html
+**Last 30 Days AI Models:**
+
+<pre>
+Opus          ████████████████████  15.8K
+GPT           ███████░░░░░░░░░░░░░░  5.4K
+Sonnet        ██░░░░░░░░░░░░░░░░░░░  1.4K
+Opencode-Cli  █░░░░░░░░░░░░░░░░░░░░  444
+</pre>
 ```
 
 ## Configuration
