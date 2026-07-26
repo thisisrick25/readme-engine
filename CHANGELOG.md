@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.0](https://github.com/thisisrick25/readme-engine/compare/v2.15.1...v2.16.0) (2026-07-26)
+
+
+### Features
+
+* **wakatime:** add AI changes, models and ratio facets ([#62](https://github.com/thisisrick25/readme-engine/issues/62)) ([6210f1a](https://github.com/thisisrick25/readme-engine/commit/6210f1a713e63487b975f40dc50cd17ab662c056))
+
 ## [2.15.1](https://github.com/thisisrick25/readme-engine/compare/v2.15.0...v2.15.1) (2026-07-26)
 
 
