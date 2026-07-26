@@ -109,7 +109,7 @@ With `sections: ["last30Languages", "sinceToday"]`, the `WAKATIME_LAST30LANGUAGE
 
 ```html
 <!-- WAKATIME_LAST30LANGUAGES:START -->
-**Last 30 Days: Languages**
+**Last 30 Days Languages:**
 
 <pre>
 TypeScript  ██████████░░░░░░░░░░   48.2%  20 hrs 24 mins [AI 61% · Manual 39%]
