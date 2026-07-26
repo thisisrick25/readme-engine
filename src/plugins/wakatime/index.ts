@@ -282,19 +282,19 @@ async function renderTotal(window: WindowKey, fetchEndpoint: EndpointFetch): Pro
 async function renderLanguages(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.languages ?? [], topN);
-    return block ? `**${WINDOWS[window].label}: Languages**\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label} Languages:**\n\n${block}` : '';
 }
 
 async function renderEditors(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.editors ?? [], topN);
-    return block ? `**${WINDOWS[window].label}: Editors**\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label} Editors:**\n\n${block}` : '';
 }
 
 async function renderCategories(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.categories ?? [], topN);
-    return block ? `**${WINDOWS[window].label}: Categories**\n\n${block}` : '';
+    return block ? `**${WINDOWS[window].label} Categories:**\n\n${block}` : '';
 }
 
 async function renderBestDay(window: WindowKey, fetchEndpoint: EndpointFetch): Promise<string> {
@@ -322,7 +322,7 @@ async function renderAiCost(window: WindowKey, fetchEndpoint: EndpointFetch, top
     if (total === undefined || total <= 0) {
         return '';
     }
-    const header = `**${WINDOWS[window].label}: AI Cost**\n\n**Total:** $${total.toFixed(2)}`;
+    const header = `**${WINDOWS[window].label} AI Cost:**\n\n**Total:** $${total.toFixed(2)}`;
     const models = (data?.ai_model_breakdown ?? [])
         .filter((model): model is WakaTimeAiModel & { name: string; cost: number } =>
             typeof model.name === 'string' && typeof model.cost === 'number' && model.cost > 0)
@@ -349,12 +349,12 @@ async function renderAiTokens(window: WindowKey, fetchEndpoint: EndpointFetch): 
     }
     const parts: string[] = [];
     if (input !== undefined && input > 0) {
-        parts.push(`**Input:** ${abbreviateCount(input)}`);
+        parts.push(`${abbreviateCount(input)} in`);
     }
     if (output !== undefined && output > 0) {
-        parts.push(`**Output:** ${abbreviateCount(output)}`);
+        parts.push(`${abbreviateCount(output)} out`);
     }
-    return `**${WINDOWS[window].label}: AI Tokens**\n\n${parts.join(' • ')}`;
+    return `**${WINDOWS[window].label} AI Tokens:** ${parts.join(' • ')}`;
 }
 
 async function renderSinceToday(fetchEndpoint: EndpointFetch): Promise<string> {
