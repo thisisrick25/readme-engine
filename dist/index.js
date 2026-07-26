@@ -31758,7 +31758,18 @@ const WINDOWS = {
     allTime: { path: '/stats/all_time', label: 'All Time' },
     lastYear: { path: '/stats/last_year', label: 'Last Year' },
 };
-const FACETS = ['Total', 'Languages', 'Editors', 'Categories', 'BestDay', 'AiCost', 'AiTokens'];
+const FACETS = [
+    'Total',
+    'Languages',
+    'Editors',
+    'Categories',
+    'BestDay',
+    'AiCost',
+    'AiTokens',
+    'AiChanges',
+    'AiModels',
+    'AiRatio',
+];
 const WINDOW_KEYS = ['today', 'last7', 'last30', 'allTime', 'lastYear'];
 const STANDALONE_KEYS = [
     'sinceToday',
@@ -31872,6 +31883,11 @@ async function fetchWindow(window, fetchEndpoint) {
         ...(grand.ai_model_breakdown !== undefined && { ai_model_breakdown: grand.ai_model_breakdown }),
         ...(grand.ai_input_tokens !== undefined && { ai_input_tokens: grand.ai_input_tokens }),
         ...(grand.ai_output_tokens !== undefined && { ai_output_tokens: grand.ai_output_tokens }),
+        ...(grand.ai_additions !== undefined && { ai_additions: grand.ai_additions }),
+        ...(grand.ai_deletions !== undefined && { ai_deletions: grand.ai_deletions }),
+        ...(grand.human_additions !== undefined && { human_additions: grand.human_additions }),
+        ...(grand.human_deletions !== undefined && { human_deletions: grand.human_deletions }),
+        ...(grand.ai_model_line_changes !== undefined && { ai_model_line_changes: grand.ai_model_line_changes }),
     };
 }
 async function renderTotal(window, fetchEndpoint) {
@@ -31957,6 +31973,47 @@ async function renderAiTokens(window, fetchEndpoint) {
         parts.push(`${abbreviateCount(output)} out`);
     }
     return `**${WINDOWS[window].label} AI Tokens:** ${parts.join(' • ')}`;
+}
+async function renderAiChanges(window, fetchEndpoint) {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const aiAdd = data?.ai_additions ?? 0;
+    const aiDel = data?.ai_deletions ?? 0;
+    const humanAdd = data?.human_additions ?? 0;
+    const humanDel = data?.human_deletions ?? 0;
+    if (aiAdd + aiDel + humanAdd + humanDel <= 0) {
+        return '';
+    }
+    const ai = `+${abbreviateCount(aiAdd)} / -${abbreviateCount(aiDel)} AI`;
+    const human = `+${abbreviateCount(humanAdd)} / -${abbreviateCount(humanDel)} human`;
+    return `**${WINDOWS[window].label} AI Changes:** ${ai} • ${human}`;
+}
+async function renderAiModels(window, fetchEndpoint, topN) {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const models = Object.entries(data?.ai_model_line_changes ?? {})
+        .filter(([, count]) => count > 0)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, topN);
+    if (models.length === 0) {
+        return '';
+    }
+    const maxCount = Math.max(...models.map(([, count]) => count));
+    const maxNameLength = Math.max(...models.map(([name]) => name.length));
+    const lines = models.map(([name, count]) => {
+        const percent = maxCount > 0 ? (count / maxCount) * 100 : 0;
+        return `${name.padEnd(maxNameLength, ' ')}  ${makeBar(percent)}  ${abbreviateCount(count)}`;
+    });
+    return `**${WINDOWS[window].label} AI Models:**\n\n<pre>\n${lines.join('\n')}\n</pre>`;
+}
+async function renderAiRatio(window, fetchEndpoint) {
+    const data = await fetchWindow(window, fetchEndpoint);
+    const aiTotal = (data?.ai_additions ?? 0) + (data?.ai_deletions ?? 0);
+    const humanTotal = (data?.human_additions ?? 0) + (data?.human_deletions ?? 0);
+    const grand = aiTotal + humanTotal;
+    if (grand <= 0) {
+        return '';
+    }
+    const aiPct = Math.round((aiTotal / grand) * 100);
+    return `**${WINDOWS[window].label} AI vs Human:** ${aiPct}% AI • ${100 - aiPct}% human`;
 }
 async function renderSinceToday(fetchEndpoint) {
     const data = (await fetchEndpoint('/all_time_since_today'))?.data;
@@ -32068,6 +32125,12 @@ function renderFacet(window, facet, fetchEndpoint, topN) {
             return renderAiCost(window, fetchEndpoint, topN);
         case 'AiTokens':
             return renderAiTokens(window, fetchEndpoint);
+        case 'AiChanges':
+            return renderAiChanges(window, fetchEndpoint);
+        case 'AiModels':
+            return renderAiModels(window, fetchEndpoint, topN);
+        case 'AiRatio':
+            return renderAiRatio(window, fetchEndpoint);
     }
 }
 async function renderSection(key, fetchEndpoint, topN) {
