@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.1](https://github.com/thisisrick25/readme-engine/compare/v2.16.0...v2.16.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **wakatime:** inline total into AI cost heading ([#65](https://github.com/thisisrick25/readme-engine/issues/65)) ([48ec88e](https://github.com/thisisrick25/readme-engine/commit/48ec88e58a1d9cd12e1d7cdf38d37c8088e3a0a0))
+
 ## [2.16.0](https://github.com/thisisrick25/readme-engine/compare/v2.15.1...v2.16.0) (2026-07-26)
 
 
