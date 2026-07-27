@@ -31942,7 +31942,7 @@ async function renderAiCost(window, fetchEndpoint, topN) {
     if (total === undefined || total <= 0) {
         return '';
     }
-    const header = `**${WINDOWS[window].label} AI Cost:**\n\n**Total:** $${total.toFixed(2)}`;
+    const header = `**${WINDOWS[window].label} AI Cost:** $${total.toFixed(2)} total`;
     const models = (data?.ai_model_breakdown ?? [])
         .filter((model) => typeof model.name === 'string' && typeof model.cost === 'number' && model.cost > 0)
         .sort((a, b) => b.cost - a.cost)
