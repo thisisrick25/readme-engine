@@ -31825,6 +31825,7 @@ async function fetchJson(path, authHeader) {
             headers: { Authorization: authHeader },
         });
         if (!response.ok) {
+            console.error(`WakaTime API request to ${path} failed: HTTP ${response.status} ${response.statusText}`);
             return null;
         }
         return (await response.json());
