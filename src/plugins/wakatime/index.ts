@@ -227,6 +227,9 @@ async function fetchJson<T>(path: string, authHeader: string): Promise<T | null>
             headers: { Authorization: authHeader },
         });
         if (!response.ok) {
+            console.error(
+                `WakaTime API request to ${path} failed: HTTP ${response.status} ${response.statusText}`,
+            );
             return null;
         }
         return (await response.json()) as T;
