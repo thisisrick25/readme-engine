@@ -24,6 +24,8 @@ interface WakaTimeAiModel {
 interface WakaTimeStatsData {
     human_readable_total?: string;
     human_readable_daily_average?: string;
+    is_up_to_date?: boolean;
+    percent_calculated?: number;
     languages?: WakaTimeStatItem[];
     editors?: WakaTimeStatItem[];
     categories?: WakaTimeStatItem[];
@@ -115,7 +117,9 @@ interface WakaTimeDurationsResponse {
 }
 
 const BAR_LENGTH = 20;
-const BASE_URL = 'https://wakatime.com/api/v1/users/current';
+const BASE_URL = 'https://api.wakatime.com/api/v1/users/current';
+const MAX_STATS_REFRESH_ATTEMPTS = 3;
+const DEFAULT_STATS_REFRESH_DELAY_MS = 2000;
 
 // --- Time windows -------------------------------------------------------
 // Each window maps to a free-tier stats/:range endpoint plus display labels.
@@ -223,16 +227,37 @@ function aiManualAnnotation(item: WakaTimeStatItem): string {
 async function fetchJson<T>(path: string, authHeader: string): Promise<T | null> {
     try {
         const url = path.startsWith('http') ? path : `${BASE_URL}${path}`;
-        const response = await fetch(url, {
-            headers: { Authorization: authHeader },
-        });
-        if (!response.ok) {
+        for (let attempt = 1; attempt <= MAX_STATS_REFRESH_ATTEMPTS; attempt++) {
+            const response = await fetch(url, {
+                headers: { Authorization: authHeader },
+            });
+            const payload = (response.status === 202 || response.ok)
+                ? (await response.json() as T & { data?: { is_up_to_date?: boolean } })
+                : undefined;
+            const freshness = payload?.data;
+            const refreshing = response.status === 202 || freshness?.is_up_to_date === false;
+
+            if (response.ok && !refreshing) {
+                return payload ?? null;
+            }
+            if (refreshing && attempt < MAX_STATS_REFRESH_ATTEMPTS) {
+                const retryAfter = Number(response.headers.get('Retry-After'));
+                const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+                    ? retryAfter * 1000
+                    : DEFAULT_STATS_REFRESH_DELAY_MS;
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+                continue;
+            }
+            if (refreshing) {
+                console.warn(`WakaTime stats for ${path} are still being calculated.`);
+                return payload ?? null;
+            }
             console.error(
                 `WakaTime API request to ${path} failed: HTTP ${response.status} ${response.statusText}`,
             );
             return null;
         }
-        return (await response.json()) as T;
+        return null;
     } catch (error) {
         console.error(`Error fetching WakaTime endpoint ${path}:`, error);
         return null;
@@ -333,7 +358,9 @@ async function renderEditors(window: WindowKey, fetchEndpoint: EndpointFetch, to
 async function renderCategories(window: WindowKey, fetchEndpoint: EndpointFetch, topN: number): Promise<string> {
     const data = await fetchWindow(window, fetchEndpoint);
     const block = renderStatItems(data?.categories ?? [], topN);
-    return block ? `**${WINDOWS[window].label} Categories:**\n\n${block}` : '';
+    return block
+        ? `**${WINDOWS[window].label} Activity Categories:**\n\n${block}\n\n_Category times are an activity breakdown and may not add up to the total coding time._`
+        : '';
 }
 
 async function renderBestDay(window: WindowKey, fetchEndpoint: EndpointFetch): Promise<string> {
