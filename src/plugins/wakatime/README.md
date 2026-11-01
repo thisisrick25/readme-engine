@@ -47,6 +47,8 @@ Each section key is a **time window** (`today`, `last7`, `last30`, `allTime`, `l
 >
 > `Languages`, `Editors`, and `Categories` items are annotated inline with their AI-assisted vs. manual coding split (e.g. `[AI 62% · Manual 38%]`) when WakaTime provides those figures.
 >
+> WakaTime calculates stats asynchronously in the background and may return HTTP `202 Accepted` while processing is still in progress. During this period, the response can report `is_up_to_date: false` and a partial `percent_calculated` value, so the returned totals may not yet represent the completed time window. Clients should wait and request the stats again instead of treating the first response as final.
+>
 > Stats responses that are still being calculated are retried up to three times. If WakaTime remains out of date, the latest response is rendered with a warning in the action log.
 
 Sections render in the order you list them. Each section also degrades gracefully: if an endpoint or facet is unavailable, that section is simply omitted and the rest still render.
