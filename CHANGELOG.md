@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.16.3](https://github.com/thisisrick25/readme-engine/compare/v2.16.2...v2.16.3) (2026-11-01)
+
+
+### Bug Fixes
+
+* **wakatime:** enhance stats fetching with retry logic and update han… ([d2bb63e](https://github.com/thisisrick25/readme-engine/commit/d2bb63e0642b179798ac63d6565298ece8b45e8d))
+* **wakatime:** enhance stats fetching with retry logic and update handling ([bc96438](https://github.com/thisisrick25/readme-engine/commit/bc964385fc1e5a63f6a929583f073346652b05c9))
+
 ## [2.16.2](https://github.com/thisisrick25/readme-engine/compare/v2.16.1...v2.16.2) (2026-10-23)
 
 
