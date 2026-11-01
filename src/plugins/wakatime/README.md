@@ -46,6 +46,8 @@ Each section key is a **time window** (`today`, `last7`, `last30`, `allTime`, `l
 > Each facet is an independent section key. Keys sharing an endpoint (for example `last30Total`, `last30Languages`, `last30Editors` all read `stats/last_30_days`) reuse a single request per run.
 >
 > `Languages`, `Editors`, and `Categories` items are annotated inline with their AI-assisted vs. manual coding split (e.g. `[AI 62% · Manual 38%]`) when WakaTime provides those figures.
+>
+> Stats responses that are still being calculated are retried up to three times. If WakaTime remains out of date, the latest response is rendered with a warning in the action log.
 
 Sections render in the order you list them. Each section also degrades gracefully: if an endpoint or facet is unavailable, that section is simply omitted and the rest still render.
 
