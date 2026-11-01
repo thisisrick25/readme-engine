@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.16.2](https://github.com/thisisrick25/readme-engine/compare/v2.16.1...v2.16.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **wakatime:** log non-OK WakaTime API responses in fetchJson ([892b948](https://github.com/thisisrick25/readme-engine/commit/892b948b3cb533062ab05fff2f721279f9331b96))
+* **wakatime:** log non-OK WakaTime API responses in fetchJson ([63e3c88](https://github.com/thisisrick25/readme-engine/commit/63e3c8817fa90ea002b085b5fc0a5671615b7adc))
+
 ## [2.16.1](https://github.com/thisisrick25/readme-engine/compare/v2.16.0...v2.16.1) (2026-07-27)
 
 
